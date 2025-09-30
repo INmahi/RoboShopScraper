@@ -272,8 +272,16 @@ def main():
             "ai_suggestions": ai_suggestions if ai_mode else None
         }
         
+        # Save config to JSON file for main.py
+        import json
+        import os
+        
+        config_file = "user_config.json"
+        with open(config_file, 'w') as f:
+            json.dump(user_config, f, indent=4)
+        
         # Display the configuration
-        st.sidebar.success("Configuration captured!")
+        st.sidebar.success(f"Configuration saved to {config_file}!")
         
         # Show the reusable Python code in the main area
         st.markdown('<h2 style="color: #00FFFF;">📋 User Configuration</h2>', unsafe_allow_html=True)

@@ -1,0 +1,15 @@
+{
+    "search_text": "ard",
+    "price_range": {
+        "min": 0,
+        "max": 99100
+    },
+    "region": "Bangladeshi",
+    "selected_websites": [
+        "daraz.com.bd",
+        "startech.com.bd"
+    ],
+    "include_images": false,
+    "ai_mode": false,
+    "ai_suggestions": null
+}
