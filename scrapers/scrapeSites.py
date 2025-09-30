@@ -1,4 +1,4 @@
-
+#scrapers for each site returns a list of product dicts with title, price, desc, link, img link
 import requests
 from bs4 import BeautifulSoup
 

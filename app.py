@@ -170,7 +170,7 @@ def main():
             min_value=0,
             max_value=100000,
             value=0,
-            step=1000,
+            step=100,
             format="%d"
         )
     with col2:
@@ -179,7 +179,7 @@ def main():
             min_value=0,
             max_value=100000,
             value=100000,
-            step=1000,
+            step=100,
             format="%d"
         )
     
@@ -203,6 +203,30 @@ def main():
         help="Toggle to include product images in results"
     )
     
+    # Website sources based on region
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("🌐 **Target Websites**")
+    
+    if region == "Bangladeshi":
+        available_websites = ["daraz.com.bd", "pickaboo.com", "startech.com.bd"]
+    elif region == "American":
+        available_websites = ["amazon.com", "ebay.com", "walmart.com"]
+    else:  # Global
+        available_websites = ["alibaba.com", "aliexpress.com", "shopify.com"]
+    
+    selected_websites = []
+    for i, site in enumerate(available_websites, 1):
+        is_selected = st.sidebar.checkbox(
+            f"{i}. {site}",
+            value=True,  # Default: all selected
+            key=f"website_{site}"
+        )
+        if is_selected:
+            selected_websites.append(site)
+    
+    if not selected_websites:
+        st.sidebar.warning("⚠️ Please select at least one website!")
+    
     # AI Compatibility Check
     st.sidebar.markdown("---")
     st.sidebar.markdown("🤖 **AI Compatibility Check**")
@@ -218,7 +242,7 @@ def main():
     if ai_mode:
         ai_suggestions = st.sidebar.text_area(
             "AI Search Components:",
-            placeholder="Enter additional search criteria for AI processing...",
+            placeholder="Enter additional Components and get the best compatible products...",
             height=100,
             help="Add specific components for AI to consider in the search"
         )
@@ -242,6 +266,7 @@ def main():
                 "max": price_range[1]
             },
             "region": region,
+            "selected_websites": selected_websites,
             "include_images": include_images,
             "ai_mode": ai_mode,
             "ai_suggestions": ai_suggestions if ai_mode else None
@@ -269,6 +294,7 @@ user_config = {{
         "max": {price_range[1]}
     }},
     "region": "{region}",
+    "selected_websites": {selected_websites},
     "include_images": {include_images},
     "ai_mode": {ai_mode},
     "ai_suggestions": {"'" + ai_suggestions + "'" if ai_mode and ai_suggestions else "None"}
@@ -278,6 +304,7 @@ user_config = {{
 search_query = user_config["search_text"]
 min_price = user_config["price_range"]["min"]
 max_price = user_config["price_range"]["max"]
+websites_to_scrape = user_config["selected_websites"]
 selected_region = user_config["region"]
 images_enabled = user_config["include_images"]
 ai_enabled = user_config["ai_mode"]
