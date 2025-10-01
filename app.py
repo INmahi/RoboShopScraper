@@ -1,6 +1,6 @@
 import streamlit as st
 import json
-
+from scrapers.sites import sites
 # Page configuration
 st.set_page_config(
     page_title="RoboShop Scraper",
@@ -208,12 +208,12 @@ def main():
     st.sidebar.markdown("🌐 **Target Websites**")
     
     if region == "Bangladeshi":
-        available_websites = ["daraz.com.bd", "pickaboo.com", "startech.com.bd"]
+        available_websites = sites['Bangladesh'].values()
     elif region == "American":
-        available_websites = ["amazon.com", "ebay.com", "walmart.com"]
+        available_websites = sites['America'].values()
     else:  # Global
-        available_websites = ["alibaba.com", "aliexpress.com", "shopify.com"]
-    
+        available_websites = list(sites['Bangladesh'].values()) + list(sites['America'].values())
+
     selected_websites = []
     for i, site in enumerate(available_websites, 1):
         is_selected = st.sidebar.checkbox(
@@ -242,7 +242,7 @@ def main():
     if ai_mode:
         ai_suggestions = st.sidebar.text_area(
             "AI Search Components:",
-            placeholder="Enter additional Components and get the best compatible products...",
+            placeholder="Enter additional Components to get the best compatible products...",
             height=100,
             help="Add specific components for AI to consider in the search"
         )

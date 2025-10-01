@@ -4,7 +4,7 @@ sites = {
         'StarTech': 'https://www.startech.com.bd/',
         'TechLandBD': 'https://techlandbd.com/',
     },
-    'USA': {
+    'America': {
         'Amazon': 'https://www.amazon.com/',
         'Newegg': 'https://www.newegg.com/',
         'BestBuy': 'https://www.bestbuy.com/',

@@ -24,8 +24,9 @@ def load_user_config():
             "include_img" : config.get("include_images"),
             "ai_mode" : config.get("ai_mode"),
             "components" : config.get("ai_suggestions"),
+            "websites": config.get("selected_websites"),
         }
-        print(user["ai_mode"])
+        return user
     except Exception as e:
         print(f"❌ Error loading config: {e}")
         return None
