@@ -16,7 +16,7 @@ def scraper(user):
         soup = BeautifulSoup(response.text, "html.parser")
 
         articles = soup.find_all("article")
-        print(len(articles)," products found")
+        # print(len(articles)," products found")
 
         if not articles:  # stop when no products returned
             break
@@ -27,7 +27,7 @@ def scraper(user):
 
             if all(word.lower() in title for word in user["search_text"].split()):
                 final_list.append(card)
-        print(len(final_list), " after filtering")
+        # print(len(final_list), " after filtering")
         for article in final_list:
             product={}
 

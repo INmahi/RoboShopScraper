@@ -146,7 +146,135 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-def main():
+def display_products(products, config):
+    """Display the processed products in a clean layout"""
+    if not products or len(products) == 0:
+        st.info("🔍 No products found matching your criteria.")
+        return
+    
+    st.markdown(f'<h2 style="color: #00FFFF;">🛒 Found {len(products)} Products</h2>', unsafe_allow_html=True)
+    
+    # Display products in a responsive grid
+    cols_per_row = 3
+    for i in range(0, len(products), cols_per_row):
+        cols = st.columns(cols_per_row)
+        
+        for j in range(cols_per_row):
+            if i + j < len(products):
+                product = products[i + j]
+                with cols[j]:
+                    create_product_card(product, config.get('include_images', False))
+    
+    # Display summary stats
+    display_summary_stats(products, config)
+
+def create_product_card(product, include_images):
+    """Create a single product card"""
+    title = product.get('title', 'No Title Available')[:60] + ('...' if len(product.get('title', '')) > 60 else '')
+    link = product.get('link', '#')
+    image_url = product.get('image', '') if include_images else ''
+    
+    # Clean and truncate title for display
+    clean_title = title.replace('"', '').replace("'", '')
+    
+    card_html = f'''
+    <div class="result-card" style="height: 400px; display: flex; flex-direction: column;">
+    '''
+    
+    # Add image if available and enabled
+    if image_url and include_images:
+        card_html += f'''
+        <div style="text-align: center; margin-bottom: 1rem;">
+            <img src="{image_url}" 
+                 style="max-width: 100%; max-height: 150px; object-fit: contain; border-radius: 8px; border: 1px solid #00FFFF;" 
+                 onerror="this.style.display='none'" />
+        </div>
+        '''
+    elif include_images:
+        card_html += f'''
+        <div style="text-align: center; margin-bottom: 1rem; height: 150px; background: linear-gradient(135deg, #2D2D2D, #1E1E1E); border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid #00FFFF;">
+            <span style="color: #666; font-size: 0.9rem;">📷 No Image</span>
+        </div>
+        '''
+    
+    # Add title
+    card_html += f'''
+        <h4 style="color: #00FFFF; margin-bottom: 1rem; flex-grow: 1; font-size: 0.95rem; line-height: 1.3;">{clean_title}</h4>
+    '''
+    
+    # Add visit button
+    if link != '#':
+        card_html += f'''
+        <div style="margin-top: auto;">
+            <a href="{link}" target="_blank" style="text-decoration: none;">
+                <div style="background: linear-gradient(45deg, #00FFFF, #00BFFF); color: #000000; padding: 0.7rem 1rem; border-radius: 8px; text-align: center; font-weight: bold; transition: all 0.3s ease;">
+                    🔗 Visit Product
+                </div>
+            </a>
+        </div>
+        '''
+    else:
+        card_html += f'''
+        <div style="margin-top: auto;">
+            <div style="background: #444; color: #888; padding: 0.7rem 1rem; border-radius: 8px; text-align: center;">
+                🔗 Link Not Available
+            </div>
+        </div>
+        '''
+    
+    card_html += '</div>'
+    
+    st.markdown(card_html, unsafe_allow_html=True)
+
+def display_summary_stats(products, config):
+    """Display summary statistics"""
+    st.markdown("---")
+    col1, col2, col3 = st.columns(3)
+    
+    # Count products by source/domain
+    sources = {}
+    for product in products:
+        link = product.get('link', '')
+        if link:
+            try:
+                from urllib.parse import urlparse
+                domain = urlparse(link).netloc
+                sources[domain] = sources.get(domain, 0) + 1
+            except:
+                sources['Unknown'] = sources.get('Unknown', 0) + 1
+    
+    with col1:
+        st.markdown(f'''
+        <div class="result-card">
+            <h4 style="color: #00BFFF;">📊 Search Statistics</h4>
+            <p>• Total Found: {len(products)}</p>
+            <p>• Sources: {len(sources)} websites</p>
+            <p>• Search Term: "{config.get("search_text", "N/A")}"</p>
+        </div>
+        ''', unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f'''
+        <div class="result-card">
+            <h4 style="color: #00BFFF;">🌐 Sources</h4>
+        ''', unsafe_allow_html=True)
+        
+        for source, count in list(sources.items())[:3]:
+            st.markdown(f'<p>• {source}: {count} items</p>', unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown(f'''
+        <div class="result-card">
+            <h4 style="color: #00BFFF;">🎯 Active Filters</h4>
+            <p>• Price: ৳{config["price_range"]["min"]:,} - ৳{config["price_range"]["max"]:,}</p>
+            <p>• Region: {config.get("region", "N/A")}</p>
+            <p>• Images: {"Enabled" if config.get("include_images") else "Disabled"}</p>
+        </div>
+        ''', unsafe_allow_html=True)
+
+def run_streamlit_app():
     # Title
     st.markdown('<h1 style="color: #00FFFF;">🤖 RoboShop Scraper</h1>', unsafe_allow_html=True)
     st.markdown('<h3 style="color: #00BFFF; margin-bottom: 2rem;">Find the best deals across multiple platforms</h3>', unsafe_allow_html=True)
@@ -280,106 +408,71 @@ def main():
         with open(config_file, 'w') as f:
             json.dump(user_config, f, indent=4)
         
-        # Display the configuration
-        st.sidebar.success(f"Configuration saved to {config_file}!")
+       
         
-        # Show the reusable Python code in the main area
-        st.markdown('<h2 style="color: #00FFFF;">📋 User Configuration</h2>', unsafe_allow_html=True)
-        
-        col1, col2 = st.columns([1, 1])
-        
-        with col1:
-            st.markdown("### 🎛️ Current Settings")
-            st.json(user_config)
-        
-        with col2:
-            st.markdown("### 🐍 Reusable Python Code")
-            python_code = f'''# User Configuration
-user_config = {{
-    "search_text": "{search_text}",
-    "price_range": {{
-        "min": {price_range[0]},
-        "max": {price_range[1]}
-    }},
-    "region": "{region}",
-    "selected_websites": {selected_websites},
-    "include_images": {include_images},
-    "ai_mode": {ai_mode},
-    "ai_suggestions": {"'" + ai_suggestions + "'" if ai_mode and ai_suggestions else "None"}
-}}
-
-# Access values:
-search_query = user_config["search_text"]
-min_price = user_config["price_range"]["min"]
-max_price = user_config["price_range"]["max"]
-websites_to_scrape = user_config["selected_websites"]
-selected_region = user_config["region"]
-images_enabled = user_config["include_images"]
-ai_enabled = user_config["ai_mode"]
-ai_input = user_config["ai_suggestions"]
-'''
-            st.code(python_code, language="python")
-    
-    # Main content area - Dummy results for now
-    else:
-        st.markdown('<h2 style="color: #00FFFF;">🛒 Search Results</h2>', unsafe_allow_html=True)
-        
-        # Create dummy product cards
-        col1, col2, col3 = st.columns(3)
-        
-        dummy_products = [
-            {"name": "Gaming Laptop Pro", "price": "৳85,000", "store": "TechShop BD", "rating": "4.8⭐"},
-            {"name": "Wireless Headphones", "price": "৳12,500", "store": "AudioWorld", "rating": "4.6⭐"},
-            {"name": "Smart Watch Ultra", "price": "৳25,000", "store": "GadgetHub", "rating": "4.7⭐"},
-            {"name": "Gaming Mouse RGB", "price": "৳3,500", "store": "GameZone BD", "rating": "4.5⭐"},
-            {"name": "Mechanical Keyboard", "price": "৳8,200", "store": "KeyWorld", "rating": "4.9⭐"},
-            {"name": "4K Monitor 27\"", "price": "৳35,000", "store": "DisplayTech", "rating": "4.6⭐"}
-        ]
-        
-        for i, product in enumerate(dummy_products):
-            with [col1, col2, col3][i % 3]:
-                st.markdown(f'''
-                <div class="result-card">
-                    <h4 style="color: #00FFFF; margin-bottom: 0.5rem;">{product["name"]}</h4>
-                    <div class="price-tag">{product["price"]}</div>
-                    <p style="margin: 0.5rem 0; color: #CCCCCC;">Store: {product["store"]}</p>
-                    <p style="margin: 0; color: #FFD700;">{product["rating"]}</p>
-                </div>
-                ''', unsafe_allow_html=True)
-        
-        # Additional info section
+        # Process and display results
         st.markdown("---")
-        col1, col2, col3 = st.columns(3)
         
-        with col1:
-            st.markdown('''
-            <div class="result-card">
-                <h4 style="color: #00BFFF;">📊 Search Statistics</h4>
-                <p>• Found: 156 products</p>
-                <p>• Stores: 12 platforms</p>
-                <p>• Avg. Price: ৳28,500</p>
-            </div>
-            ''', unsafe_allow_html=True)
-        
-        with col2:
-            st.markdown('''
-            <div class="result-card">
-                <h4 style="color: #00BFFF;">⚡ Performance</h4>
-                <p>• Search Time: 2.3s</p>
-                <p>• Cache Hit: 78%</p>
-                <p>• Success Rate: 94%</p>
-            </div>
-            ''', unsafe_allow_html=True)
-        
-        with col3:
-            st.markdown('''
-            <div class="result-card">
-                <h4 style="color: #00BFFF;">🎯 Filters Active</h4>
-                <p>• Price Range: Any</p>
-                <p>• Region: Bangladesh</p>
-                <p>• Images: Disabled</p>
-            </div>
-            ''', unsafe_allow_html=True)
+        # Import and run the aggregator
+        try:
+            import aggregator
+            
+            # Create progress indicators
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            
+            # Step 1: Load configuration
+            status_text.text("📋 Loading configuration...")
+            progress_bar.progress(20)
+            
+            # Step 2: Initialize scraping
+            status_text.text("🔧 Initializing scrapers...")
+            progress_bar.progress(40)
+            
+            # Step 3: Scrape websites
+            status_text.text("🚀 Scraping selected websites...")
+            progress_bar.progress(60)
+            
+            # Get the processed results
+            products = aggregator.aggregate_products(user_config)
+            
+            # Step 4: Processing results
+            status_text.text("📊 Processing results...")
+            progress_bar.progress(80)
+            
+            # Step 5: Complete
+            status_text.text("✅ Complete!")
+            progress_bar.progress(100)
+            
+            # Clear progress indicators
+            progress_bar.empty()
+            status_text.empty()
+            
+            # Display results
+            if products:
+                display_products(products, user_config)
+            else:
+                st.info("🔍 No products found matching your criteria. Try different search terms or adjust your filters.")
+                
+        except Exception as e:
+            st.error(f"❌ Error processing results: {str(e)}")
+            st.info("💡 Please check your aggregator.py file and ensure all dependencies are installed.")
+    
+    # Main content area - Default state
+    else:
+        # Welcome message when no search is performed
+        st.markdown('<h2 style="color: #00FFFF;">🔍 Ready to Search</h2>', unsafe_allow_html=True)
+        st.markdown("""
+        <div class="result-card" style="text-align: center; padding: 3rem;">
+            <h3 style="color: #00BFFF; margin-bottom: 1.5rem;">Configure your search and click "Let's Go!" to start</h3>
+            <p style="color: #CCCCCC; font-size: 1.1rem; line-height: 1.6;">
+                📝 Enter your search terms<br>
+                💰 Set your price range<br>
+                🌐 Choose websites to scrape<br>
+                🚀 Click "Let's Go!" to begin
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
-    main()
+    run_streamlit_app()

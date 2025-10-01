@@ -6,7 +6,7 @@ user = main.load_user_config()
 
 def aggregate_products(user):
     products = []
-    for website in user['websites']:
+    for website in user['selected_websites']:
         if 'store.roboticsbd.com' in website:
             products.extend(roboticsbd.scraper(user))
         # elif 'primeabgb' in website:

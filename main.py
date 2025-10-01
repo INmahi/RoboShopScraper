@@ -1,6 +1,7 @@
 import json
 import os
 from datetime import datetime
+import aggregator
 def load_user_config():
     """Load user configuration from Streamlit app"""
     config_file = "user_config.json"
@@ -22,7 +23,7 @@ def load_user_config():
             "include_img" : config.get("include_images"),
             "ai_mode" : config.get("ai_mode"),
             "components" : config.get("ai_suggestions"),
-            "websites": config.get("selected_websites"),
+            "selected_websites": config.get("selected_websites"),
         }
         return user
     except Exception as e:
@@ -30,5 +31,14 @@ def load_user_config():
         return None
 
 
+def get_ai_response():
+    pass
+
+
+def main():
+    aggregator.aggregate_products(load_user_config())
+
+
+
 if __name__ == "__main__":
-    load_user_config()
+    main()
