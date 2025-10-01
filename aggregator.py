@@ -1,27 +1,25 @@
-from scrapers.scrapeSites import roboShopScraper#, primeABGBScraper, mdComputersScraper
-#handle bangladeshi/american....
-def aggregate_products(query: str,region:str):
-    if region == "BD":
-        # Handle Bangladeshi region specific scraping
-        products = []
-        products.extend(roboShopScraper(query))
-        # products.extend(primeABGBScraper(query))
-        # products.extend(mdComputersScraper(query))
-        return products
-    elif region == "US":
-        # Handle American region specific scraping
-        products = []
-        products.extend(roboShopScraper(query))
-        # products.extend(primeABGBScraper(query))
-        # products.extend(mdComputersScraper(query))
-        return products
-    elif region == "ALL":
-        # Handle global scraping
-        products = []
-        products.extend(roboShopScraper(query))
-        # products.extend(primeABGBScraper(query))
-        # products.extend(mdComputersScraper(query))
-        return products
-    else:
-        raise ValueError("Unsupported region. Please use 'BD', 'US', or 'ALL'.")
+from scrapers import roboticsbd
+import main
 
+user = main.load_user_config()
+
+
+def aggregate_products(user):
+    products = []
+    for website in user['websites']:
+        if 'store.roboticsbd.com' in website:
+            products.extend(roboticsbd.scraper(user))
+        # elif 'primeabgb' in website:
+        #     products.extend(primeABGBScraper(user))
+        # elif 'mdcomputers' in website:
+        #     products.extend(mdComputersScraper(user))
+        else:
+            print(f"❌ No scraper available for {website}")
+
+    return products
+
+
+
+
+if __name__ == "__main__":
+    print(aggregate_products(main.load_user_config()))

@@ -1,6 +1,6 @@
 sites = {
     'Bangladesh': {
-        'RoboShop': 'https://www.robo-shop.com/',
+        'RoboShop': 'https://www.store.roboticsbd.com/',
         'StarTech': 'https://www.startech.com.bd/',
         'TechLandBD': 'https://techlandbd.com/',
     },

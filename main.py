@@ -1,7 +1,6 @@
 import json
 import os
 from datetime import datetime
-
 def load_user_config():
     """Load user configuration from Streamlit app"""
     config_file = "user_config.json"
@@ -14,7 +13,6 @@ def load_user_config():
     try:
         with open(config_file, 'r') as f:
             config = json.load(f)
-        print("✅ Configuration loaded successfully!")
 
         user = {
             "search_text" : config.get("search_text"),
