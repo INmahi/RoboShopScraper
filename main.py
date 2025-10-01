@@ -16,15 +16,16 @@ def load_user_config():
             config = json.load(f)
         print("✅ Configuration loaded successfully!")
 
-        user_search_text = config.get("search_text")
-        user_price_min = config.get("price_range", {}).get("min")
-        user_price_max = config.get("price_range", {}).get("max")
-        user_region = config.get("region")
-        user_include_img = config.get("include_images")
-        user_ai_mode = config.get("ai_mode")
-        user_components = config.get("ai_suggestions")
-        
-        return config
+        user = {
+            "search_text" : config.get("search_text"),
+            "price_min" : config.get("price_range", {}).get("min"),
+            "price_max" : config.get("price_range", {}).get("max"),
+            "region" : config.get("region"),
+            "include_img" : config.get("include_images"),
+            "ai_mode" : config.get("ai_mode"),
+            "components" : config.get("ai_suggestions"),
+        }
+        print(user["ai_mode"])
     except Exception as e:
         print(f"❌ Error loading config: {e}")
         return None
