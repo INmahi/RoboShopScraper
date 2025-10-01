@@ -3,7 +3,6 @@
 import requests
 from rich import print 
 from bs4 import BeautifulSoup
-from sites import sites
 
 
 class Site:

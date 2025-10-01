@@ -7,36 +7,28 @@ def load_user_config():
     config_file = "user_config.json"
     
     if not os.path.exists(config_file):
-        print("❌ No configuration found!")
-        print("💡 Please run the Streamlit app first and click 'Let's Go!'")
-        print("   Command: streamlit run app.py")
+        print("❌ Something went wrong!")
+        print("💡 might be a missing configuration file")
         return None
     
     try:
         with open(config_file, 'r') as f:
             config = json.load(f)
         print("✅ Configuration loaded successfully!")
+
+        user_search_text = config.get("search_text")
+        user_price_min = config.get("price_range", {}).get("min")
+        user_price_max = config.get("price_range", {}).get("max")
+        user_region = config.get("region")
+        user_include_img = config.get("include_images")
+        user_ai_mode = config.get("ai_mode")
+        user_components = config.get("ai_suggestions")
+        
         return config
     except Exception as e:
         print(f"❌ Error loading config: {e}")
         return None
 
-def display_config(config):
-    """Display the loaded configuration"""
-    print("\n" + "="*50)
-    print("📋 USER CONFIGURATION")
-    print("="*50)
-    print(f"🔍 Search Text: {config.get('search_text', 'N/A')}")
-    print(f"💰 Price Range: ৳{config['price_range']['min']:,} - ৳{config['price_range']['max']:,}")
-    print(f"🌍 Region: {config.get('region', 'N/A')}")
-    print(f"🌐 Selected Websites:")
-    for i, site in enumerate(config.get('selected_websites', []), 1):
-        print(f"   {i}. {site}")
-    print(f"📸 Include Images: {config.get('include_images', False)}")
-    print(f"🤖 AI Mode: {config.get('ai_mode', False)}")
-    if config.get('ai_mode') and config.get('ai_suggestions'):
-        print(f"💭 AI Suggestions: {config['ai_suggestions']}")
-    print("="*50 + "\n")
 
 if __name__ == "__main__":
-    display_config(load_user_config())
+    load_user_config()

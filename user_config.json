@@ -1,15 +1,15 @@
 {
-    "search_text": "ard",
+    "search_text": "arduino",
     "price_range": {
         "min": 0,
-        "max": 99100
+        "max": 100000
     },
-    "region": "Bangladeshi",
+    "region": "Global",
     "selected_websites": [
-        "daraz.com.bd",
-        "startech.com.bd"
+        "alibaba.com",
+        "aliexpress.com"
     ],
-    "include_images": false,
+    "include_images": true,
     "ai_mode": false,
     "ai_suggestions": null
 }

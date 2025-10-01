@@ -39,3 +39,7 @@ def search_filter(card_list,txt):
 print(search_filter(all_articles,"arduino Uno"))
 
 #get a page..loop through first 2/3 pages....get the product articles...filter out titles not containing the search terms...
+
+
+
+
