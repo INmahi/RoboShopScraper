@@ -1,7 +1,7 @@
 sites = {
     'Bangladesh': {
-        'RoboShop': 'https://www.store.roboticsbd.com/',
-        'StarTech': 'https://www.startech.com.bd/',
+        'Roboticsbd': 'https://www.store.roboticsbd.com/',
+        'Roboticsshop': 'https://roboticsshop.com.bd/',
         'TechLandBD': 'https://techlandbd.com/',
     },
     'America': {

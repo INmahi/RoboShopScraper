@@ -1,12 +1,13 @@
 {
     "search_text": "arduino uno",
     "price_range": {
-        "min": 30,
-        "max": 1000
+        "min": 0,
+        "max": 100000
     },
     "region": "Bangladeshi",
     "selected_websites": [
-        "https://www.store.roboticsbd.com/"
+        "https://www.store.roboticsbd.com/",
+        "https://roboticsshop.com.bd/"
     ],
     "include_images": true,
     "ai_mode": false,

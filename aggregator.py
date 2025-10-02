@@ -1,4 +1,4 @@
-from scrapers import roboticsbd
+from scrapers import roboticsbd, roboticsshop
 import main
 
 
@@ -7,8 +7,8 @@ def aggregate_products(user):
     for website in user['selected_websites']:
         if 'store.roboticsbd.com' in website:
             products.extend(roboticsbd.scraper(user))
-        # elif 'primeabgb' in website:
-        #     products.extend(primeABGBScraper(user))
+        elif 'roboticsshop.com.bd' in website:
+            products.extend(roboticsshop.scraper(user))
         # elif 'mdcomputers' in website:
         #     products.extend(mdComputersScraper(user))
         else:

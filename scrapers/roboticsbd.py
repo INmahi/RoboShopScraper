@@ -4,13 +4,11 @@ from bs4 import BeautifulSoup
 
 
 headers = {"User-Agent": "Mozilla/5.0"}
-query = "arduino uno"
-page = 1
 products = []
 seen = set()
 
 def scraper(user):
-
+    query = user["search_text"]
     for i in range (1,3):
         url = f"https://store.roboticsbd.com/search?controller=search&s={query.replace(' ','+')}&page={i}"
         response = requests.get(url, headers=headers)
@@ -26,7 +24,7 @@ def scraper(user):
         for card in articles:
             title = card.find('h3',class_='product-title').get_text(strip = True).lower()
             
-            if all(word.lower() in title for word in user["search_text"].split()):
+            if all(word.lower() in title for word in query.split()):
                 similar_text_list.append(card)
         print(len(similar_text_list), " after text filtering")
 
