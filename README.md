@@ -278,9 +278,9 @@ This tool is for educational / research use. You are responsible for ensuring th
 
 ## 15. Contact
 
-Author: Ishat Noor Mahi
-Contact: inmlink.netlify.app
-Issues: Please open a GitHub issue with details & reproduction steps.
+**Author:** Ishat Noor Mahi  
+**Contact:** [inmlink.netlify.app](https://inmlink.netlify.app)  
+**Issues:** Please [open a GitHub issue](https://github.com/INmahi/RoboShopScraper/issues) with details & reproduction steps.
 
 ---
 
