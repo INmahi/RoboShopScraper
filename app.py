@@ -154,6 +154,27 @@ def display_products(products, config):
 
     st.markdown(f'<h2 style="color: #FA9320;">🛒 Found {len(products)} Products</h2>', unsafe_allow_html=True)
 
+    # Augment products with numeric price for sorting if not present
+    for p in products:
+        if 'numeric_price' not in p:
+            p_price = p.get('price', '')
+            # crude extraction of digits
+            import re
+            digits = re.findall(r'\d+', str(p_price))
+            p['numeric_price'] = int(''.join(digits)) if digits else 0
+
+    sort_choice = st.selectbox(
+        "Sort products by",
+        ["Original", "Price: Low to High", "Price: High to Low"],
+        index=0,
+        help="Choose how to order the results"
+    )
+
+    if sort_choice == "Price: Low to High":
+        products = sorted(products, key=lambda x: x.get('numeric_price', 0))
+    elif sort_choice == "Price: High to Low":
+        products = sorted(products, key=lambda x: x.get('numeric_price', 0), reverse=True)
+
     cols_per_row = 3
     include_images = config.get('include_images', False)
 
@@ -168,7 +189,7 @@ def display_products(products, config):
 
 
 def create_product_card(product, include_images: bool):
-    """Render a single product card."""
+    """Render a single product card with domain-based accent color."""
     title = product.get("title", "No Title Available")
     link = product.get("link", "#")
     price = product.get("price") or "Price N/A"
@@ -178,41 +199,71 @@ def create_product_card(product, include_images: bool):
 
     from urllib.parse import urlparse
     try:
-        domain = urlparse(link).netloc or "Unknown"
+        domain = urlparse(link).netloc or "unknown"
     except Exception:
-        domain = "Unknown"
+        domain = "unknown"
+    short_domain = domain.replace('www.', '')
 
-    parts = []
-    parts.append('<div class="result-card" style="display:flex;flex-direction:column;min-height:360px;position:relative;border-color:#FA9320;box-shadow:0 0 14px #fa93201a;">')
-    parts.append(f'<div style="position:absolute;top:8px;right:8px;background:rgba(250,147,32,0.15);backdrop-filter:blur(4px);padding:4px 8px;border:1px solid #FA9320;border-radius:14px;font-size:11px;color:#FA9320;font-weight:600;">🛍️ {domain.replace("www.", "")}</div>')
+    # Deterministic color palette mapping
+    palette = [
+        ("#FA9320", "#ffb469"),  # orange
+        ("#2ECC71", "#6DFFB0"),  # green
+        ("#3498DB", "#7FC6FF"),  # blue
+        ("#9B59B6", "#D7A8FF"),  # purple
+        ("#E74C3C", "#FF9A8F"),  # red
+        ("#F1C40F", "#FFE680"),  # yellow
+        ("#1ABC9C", "#6EF5DF"),  # teal
+    ]
+    # Hash domain to select color
+    idx = sum(ord(c) for c in short_domain) % len(palette)
+    base_color, light_color = palette[idx]
+
+    parts: list[str] = []
+    parts.append(
+        f'<div class="result-card" style="display:flex;flex-direction:column;min-height:360px;position:relative;border-color:{base_color};box-shadow:0 0 14px {base_color}33;">'
+    )
+    parts.append(
+        f'<div style="position:absolute;top:8px;right:8px;background:{base_color}22;padding:4px 8px;border:1px solid {base_color};border-radius:14px;font-size:11px;color:{base_color};font-weight:600;">🛍️ {short_domain}</div>'
+    )
 
     if include_images:
         if image_url:
             parts.append(
                 '<div style="flex:0 0 150px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;overflow:hidden;">'
-                f'<img alt="{clean_title}" src="{image_url}" style="max-width:100%;max-height:150px;object-fit:contain;border-radius:6px;border:1px solid #073642;" '
+                f'<img alt="{clean_title}" src="{image_url}" style="max-width:100%;max-height:150px;object-fit:contain;border-radius:6px;border:1px solid {base_color}55;" '
                 "onerror=\"this.onerror=null;this.style.display='none';\" />"
                 '</div>'
             )
         else:
-            parts.append('<div style="flex:0 0 150px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;border:1px dashed #004455;border-radius:6px;color:#555;font-size:13px;">No Image</div>')
+            parts.append(
+                f'<div style="flex:0 0 150px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;border:1px dashed {base_color};border-radius:6px;color:{base_color};font-size:13px;opacity:0.7;">No Image</div>'
+            )
 
     parts.append(
         f'<div style="flex-grow:1;">'
-        f'<h4 style="margin:0 0 8px 0;color:#FA9320;font-size:0.97rem;line-height:1.35;">📦 {clean_title}</h4>'
+        f'<h4 style="margin:0 0 8px 0;color:{base_color};font-size:0.97rem;line-height:1.35;">📦 {clean_title}</h4>'
         '</div>'
     )
 
+    # Determine plain text color for price based on specific domains
+    price_color = base_color  # default fallback
+    ld = short_domain.lower()
+    if 'roboticsbd' in ld:
+        price_color = '#F1C40F'  # yellow
+    elif 'roboticsshop' in ld or 'robotics-shop' in ld or 'roboticsshop' in ld:
+        price_color = '#3498DB'  # blue
+
+    # Plain text price (no box, no bg, no shadow, no pill)
     parts.append(
-        f'<div style="margin:0 0 14px 0;">'
-        f'<span class="price-tag" style="color:#FA9320;display:inline-flex;align-items:center;gap:6px;font-size:18px">💰 <span>{price}</span></span>'
+        f'<div style="margin:2px 0 14px 0;">'
+        f'<span style="color:{price_color};font-size:16px;font-weight:700;letter-spacing:0.4px;">💰 {price}</span>'
         '</div>'
     )
 
     if link and link != "#":
         parts.append(
             f'<a href="{link}" target="_blank" rel="noopener" style="text-decoration:none;margin-top:auto;">'
-            '<div style="background:linear-gradient(135deg,#FA9320,#ffb469);color:#000;font-weight:650;text-align:center;padding:10px 12px;border-radius:8px;font-size:0.85rem;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:6px;">🔗 Visit</div>'
+            f'<div style="background:linear-gradient(135deg,{base_color},{light_color});color:#111;font-weight:650;text-align:center;padding:10px 12px;border-radius:8px;font-size:0.85rem;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:6px;">🔗 Visit</div>'
             '</a>'
         )
     else:
@@ -406,6 +457,10 @@ def run_streamlit_app():
                 # Get the processed results through main.py
                 import main
                 products = main.main()
+
+                # Persist results & config in session state
+                st.session_state["results_products"] = products
+                st.session_state["results_config"] = user_config
                 
                 # Step 4: Processing results
                 progress_bar.progress(80)
@@ -433,19 +488,25 @@ def run_streamlit_app():
     
     # Main content area - Default state
     else:
-        # Welcome message when no search is performed
-        st.markdown('<h2 style="color: #00FFFF;">🔍 Ready to Search</h2>', unsafe_allow_html=True)
-        st.markdown("""
-        <div class="result-card" style="text-align: center; padding: 3rem;">
-            <h3 style="color: #00BFFF; margin-bottom: 1.5rem;">Configure your search and click "Let's Go!" to start</h3>
-            <p style="color: #CCCCCC; font-size: 1.1rem; line-height: 1.6;">
-                📝 Enter your search terms<br>
-                💰 Set your price range<br>
-                🌐 Choose websites to scrape<br>
-                🚀 Click "Let's Go!" to begin
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
+        # If we already have products in session, show them (enables sorting without re-running search)
+        session_products = st.session_state.get("results_products")
+        session_config = st.session_state.get("results_config")
+        if session_products and session_config:
+            display_products(session_products, session_config)
+        else:
+            # Welcome message when no search is performed yet
+            st.markdown('<h2 style="color: #00FFFF;">🔍 Ready to Search</h2>', unsafe_allow_html=True)
+            st.markdown("""
+            <div class="result-card" style="text-align: center; padding: 3rem;">
+                <h3 style="color: #00BFFF; margin-bottom: 1.5rem;">Configure your search and click "Let's Go!" to start</h3>
+                <p style="color: #CCCCCC; font-size: 1.1rem; line-height: 1.6;">
+                    📝 Enter your search terms<br>
+                    💰 Set your price range<br>
+                    🌐 Choose websites to scrape<br>
+                    🚀 Click "Let's Go!" to begin
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     run_streamlit_app()
