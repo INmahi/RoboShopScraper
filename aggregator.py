@@ -21,3 +21,4 @@ def aggregate_products(user):
 
 if __name__ == "__main__":
     print(aggregate_products(main.load_user_config()))
+    

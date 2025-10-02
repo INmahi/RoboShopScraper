@@ -118,10 +118,10 @@ st.markdown("""
     
     /* Price tags */
     .price-tag {
-        background: linear-gradient(45deg, #00FFFF, #00BFFF);
-        color: #000000;
+       
+        color: #FA9320;
         padding: 0.5rem 1rem;
-        border-radius: 20px;
+      
         font-weight: bold;
         display: inline-block;
         margin: 0.5rem 0;
@@ -148,221 +148,79 @@ st.markdown("""
 
 def display_products(products, config):
     """Display the processed products in a clean layout"""
-    if not products or len(products) == 0:
+    if not products:
         st.info("🔍 No products found matching your criteria.")
         return
-    
-    # Add a nice header with the count
-    st.markdown(f'<h2 style="color: #00FFFF;">🛒 Found {len(products)} Products</h2>', unsafe_allow_html=True)
-    
-    # Add filtering options
-    
-    # Display products in a responsive grid with better spacing
+
+    st.markdown(f'<h2 style="color: #FA9320;">🛒 Found {len(products)} Products</h2>', unsafe_allow_html=True)
+
     cols_per_row = 3
-    
-    # Calculate rows needed
-    total_rows = (len(products) + cols_per_row - 1) // cols_per_row
-    
+    include_images = config.get('include_images', False)
+
     for i in range(0, len(products), cols_per_row):
         cols = st.columns(cols_per_row)
-        
         for j in range(cols_per_row):
-            if i + j < len(products):
-                product = products[i + j]
+            idx = i + j
+            if idx < len(products):
                 with cols[j]:
-                    create_product_card(product, config.get('include_images', False))
-    
-    # Display summary stats
-    # display_summary_stats(products, config)
+                    create_product_card(products[idx], include_images)
+    # end for
 
-def create_product_card(product, include_images):
-    """Create a single product card with a clean design"""
-    # Extract product information
-    title = product.get('title', 'No Title Available')
-    link = product.get('link', '#')
-    image_url = product.get('image', '') if include_images else ''
-    
-    # Clean and truncate title for display
-    if len(title) > 70:
-        clean_title = title[:70].replace('"', '').replace("'", '') + "..."
-    else:
-        clean_title = title.replace('"', '').replace("'", '')
-    
-    # Extract domain for display
+
+def create_product_card(product, include_images: bool):
+    """Render a single product card."""
+    title = product.get("title", "No Title Available")
+    link = product.get("link", "#")
+    price = product.get("price") or "Price N/A"
+    image_url = product.get("image") if include_images else None
+
+    clean_title = (title[:70] + "...") if len(title) > 70 else title
+
+    from urllib.parse import urlparse
     try:
-        from urllib.parse import urlparse
-        domain = urlparse(link).netloc if link and link != '#' else "Unknown Source"
-    except:
-        domain = "Unknown Source"
-    
-    # Create the card container with a fixed height
-    card_html = f'''
-    <div class="result-card" style="height: 350px; display: flex; flex-direction: column; overflow: hidden; position: relative;">
-    '''
-    
-    # Add source badge at the top right
-    card_html += f'''
-    <div style="position: absolute; top: 10px; right: 10px; background: rgba(0, 0, 0, 0.7); 
-                padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; z-index: 10;">
-        <span style="color: #00BFFF;">{domain.replace('www.', '')}</span>
-    </div>
-    '''
-    
-    # Add image if available and enabled
-    if image_url and include_images:
-        card_html += f'''
-        <div style="text-align: center; margin-bottom: 1rem; height: 160px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-            <img src="{image_url}" 
-                 style="max-width: 100%; max-height: 160px; object-fit: contain; border-radius: 8px; transition: transform 0.3s ease;" 
-                 onerror="this.onerror=null; this.src='https://via.placeholder.com/150x150?text=No+Image'; this.style.opacity='0.5';"
-                 onmouseover="this.style.transform='scale(1.05)'"
-                 onmouseout="this.style.transform='scale(1)'" />
-        </div>
-        '''
-    elif include_images:
-        card_html += f'''
-        <div style="text-align: center; margin-bottom: 1rem; height: 160px; background: linear-gradient(135deg, #1A1A1A, #0E0E0E); 
-                    border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid #004455;">
-            <span style="color: #666; font-size: 0.9rem;">📷 No Image Available</span>
-        </div>
-        '''
-    
-    # Add title with hover effect
-    card_html += f'''
-        <div style="flex-grow: 1; overflow: hidden;">
-            <h4 style="color: #00FFFF; margin-bottom: 0.5rem; font-size: 0.95rem; line-height: 1.4; 
-                       transition: color 0.3s ease;" 
-                onmouseover="this.style.color='#FFFFFF'"
-                onmouseout="this.style.color='#00FFFF'">
-                {clean_title}
-            </h4>
-        </div>
-    '''
-    
-    # Add visit button with enhanced hover effect
-    if link != '#':
-        card_html += f'''
-        <div style="margin-top: auto; padding-top: 0.5rem;">
-            <a href="{link}" target="_blank" style="text-decoration: none;" title="Visit {clean_title}">
-                <div style="background: linear-gradient(45deg, #00FFFF, #00BFFF); color: #000000; 
-                           padding: 0.7rem 1rem; border-radius: 8px; text-align: center; 
-                           font-weight: bold; transition: all 0.3s ease;"
-                     onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(0, 191, 255, 0.4)'"
-                     onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                    🔗 Visit Product
-                </div>
-            </a>
-        </div>
-        '''
-    else:
-        card_html += f'''
-        <div style="margin-top: auto; padding-top: 0.5rem;">
-            <div style="background: #444; color: #888; padding: 0.7rem 1rem; border-radius: 8px; text-align: center;">
-                🔗 Link Not Available
-            </div>
-        </div>
-        '''
-    
-    card_html += '</div>'
-    
-    st.markdown(card_html, unsafe_allow_html=True)
+        domain = urlparse(link).netloc or "Unknown"
+    except Exception:
+        domain = "Unknown"
 
-# def display_summary_stats(products, config):
-#     """Display summary statistics with improved error handling"""
-#     st.markdown("---")
-#     col1, col2, col3 = st.columns(3)
-    
-#     # Count products by source/domain
-#     sources = {}
-#     with_images = 0
-    
-#     for product in products:
-#         # Count products with images
-#         if product.get('image'):
-#             with_images += 1
-            
-#         # Count sources
-#         link = product.get('link', '')
-#         if link:
-#             try:
-#                 from urllib.parse import urlparse
-#                 domain = urlparse(link).netloc
-#                 if domain:
-#                     sources[domain] = sources.get(domain, 0) + 1
-#                 else:
-#                     sources['Unknown'] = sources.get('Unknown', 0) + 1
-#             except:
-#                 sources['Unknown'] = sources.get('Unknown', 0) + 1
-    
-#     # Search Statistics Card
-#     with col1:
-#         search_term = config.get("search_text", "")
-#         if len(search_term) > 30:
-#             search_term = search_term[:30] + "..."
-            
-#         st.markdown(f'''
-#         <div class="result-card">
-#             <h4 style="color: #00BFFF;">📊 Search Results</h4>
-#             <p>• Total Found: <span style="color: #00FFFF; font-weight: bold;">{len(products)}</span> products</p>
-#             <p>• With Images: <span style="color: #00FFFF;">{with_images}</span> products</p>
-#             <p>• Search Term: "<span style="color: #00FFFF;">{search_term}</span>"</p>
-#         </div>
-#         ''', unsafe_allow_html=True)
-    
-#     # Sources Card
-#     with col2:
-#         st.markdown(f'''
-#         <div class="result-card">
-#             <h4 style="color: #00BFFF;">🌐 Sources</h4>
-#         ''', unsafe_allow_html=True)
-        
-#         if sources:
-#             # Sort sources by count
-#             sorted_sources = sorted(sources.items(), key=lambda x: x[1], reverse=True)
-#             for source, count in sorted_sources[:3]:
-#                 # Clean up domain name for display
-#                 display_source = source.replace('www.', '')
-#                 if len(display_source) > 30:
-#                     display_source = display_source[:27] + "..."
-#                 st.markdown(f'<p>• <span style="color: #00FFFF;">{display_source}</span>: {count} items</p>', unsafe_allow_html=True)
-            
-#             # If there are more sources
-#             if len(sources) > 3:
-#                 remaining = sum([count for _, count in sorted_sources[3:]])
-#                 st.markdown(f'<p>• <span style="color: #888;">+{len(sources) - 3} more sources</span>: {remaining} items</p>', unsafe_allow_html=True)
-#         else:
-#             st.markdown(f'<p style="color: #888;">No source information available</p>', unsafe_allow_html=True)
-            
-#         st.markdown('</div>', unsafe_allow_html=True)
-    
-#     # Active Filters Card
-#     with col3:
-#         # Handle potential missing config values with safe defaults
-#         min_price = config.get("price_range", {}).get("min", 0)
-#         max_price = config.get("price_range", {}).get("max", 100000)
-        
-#         try:
-#             min_price = int(min_price)
-#             max_price = int(max_price)
-#         except (ValueError, TypeError):
-#             min_price = 0
-#             max_price = 100000
-            
-#         region = config.get("region", "N/A")
-#         include_images = config.get("include_images", False)
-        
-#         # Selected websites
-#         selected_websites = config.get("selected_websites", [])
-#         website_count = len(selected_websites) if selected_websites else 0
-            
-#         st.markdown(f'''
-#         <div class="result-card">
-#             <h4 style="color: #00BFFF;">🎯 Active Filters</h4>
-#             <p>• Price Range: <span style="color: #00FFFF;">৳{min_price:,} - ৳{max_price:,}</span></p>
-#             <p>• Region: <span style="color: #00FFFF;">{region}</span></p>
-#             <p>• Websites: <span style="color: #00FFFF;">{website_count}</span> selected</p>
-#         </div>
-#         ''', unsafe_allow_html=True)
+    parts = []
+    parts.append('<div class="result-card" style="display:flex;flex-direction:column;min-height:360px;position:relative;border-color:#FA9320;box-shadow:0 0 14px #fa93201a;">')
+    parts.append(f'<div style="position:absolute;top:8px;right:8px;background:rgba(250,147,32,0.15);backdrop-filter:blur(4px);padding:4px 8px;border:1px solid #FA9320;border-radius:14px;font-size:11px;color:#FA9320;font-weight:600;">🛍️ {domain.replace("www.", "")}</div>')
+
+    if include_images:
+        if image_url:
+            parts.append(
+                '<div style="flex:0 0 150px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;overflow:hidden;">'
+                f'<img alt="{clean_title}" src="{image_url}" style="max-width:100%;max-height:150px;object-fit:contain;border-radius:6px;border:1px solid #073642;" '
+                "onerror=\"this.onerror=null;this.style.display='none';\" />"
+                '</div>'
+            )
+        else:
+            parts.append('<div style="flex:0 0 150px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;border:1px dashed #004455;border-radius:6px;color:#555;font-size:13px;">No Image</div>')
+
+    parts.append(
+        f'<div style="flex-grow:1;">'
+        f'<h4 style="margin:0 0 8px 0;color:#FA9320;font-size:0.97rem;line-height:1.35;">📦 {clean_title}</h4>'
+        '</div>'
+    )
+
+    parts.append(
+        f'<div style="margin:0 0 14px 0;">'
+        f'<span class="price-tag" style="color:#FA9320;display:inline-flex;align-items:center;gap:6px;font-size:18px">💰 <span>{price}</span></span>'
+        '</div>'
+    )
+
+    if link and link != "#":
+        parts.append(
+            f'<a href="{link}" target="_blank" rel="noopener" style="text-decoration:none;margin-top:auto;">'
+            '<div style="background:linear-gradient(135deg,#FA9320,#ffb469);color:#000;font-weight:650;text-align:center;padding:10px 12px;border-radius:8px;font-size:0.85rem;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:6px;">🔗 Visit</div>'
+            '</a>'
+        )
+    else:
+        parts.append('<div style="margin-top:auto;background:#333;color:#777;text-align:center;padding:10px 12px;border-radius:8px;font-size:0.85rem;">Link Not Available</div>')
+
+    parts.append('</div>')
+    st.markdown("".join(parts), unsafe_allow_html=True)
+
 
 def run_streamlit_app():
     # Title

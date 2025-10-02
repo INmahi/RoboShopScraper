@@ -2,6 +2,7 @@
 import requests
 from bs4 import BeautifulSoup
 
+
 headers = {"User-Agent": "Mozilla/5.0"}
 query = "arduino uno"
 page = 1
@@ -21,12 +22,23 @@ def scraper(user):
         if not articles:  # stop when no products returned
             break
 
-        final_list = []
+        similar_text_list = []
         for card in articles:
             title = card.find('h3',class_='product-title').get_text(strip = True).lower()
-
+            
             if all(word.lower() in title for word in user["search_text"].split()):
+                similar_text_list.append(card)
+        print(len(similar_text_list), " after text filtering")
+
+        final_list = []
+        for card in similar_text_list:
+
+            price = card.find('span',class_='price').get_text(strip = True).replace(",","").replace("BDT ","")
+            price_val = int(price) if price.isdigit() else 0
+            if user["price_min"] <=price_val <= user["price_max"]:
+                print( price_val, " in range")
                 final_list.append(card)
+        print(len(final_list), " after price filtering")
         # print(len(final_list), " after filtering")
         for article in final_list:
             product={}
@@ -44,10 +56,9 @@ def scraper(user):
                 img = article.find("img").get("src")
                 product["image"] = img
             
-            
-
             products.append(product)
 
+        
 
     # print(products)
 
