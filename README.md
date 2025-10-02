@@ -198,8 +198,10 @@ Ensure you:
 ```python
 from scrapers import mynewstore
 
-if 'example.com' in website:
-    products.extend(mynewstore.scraper(user))
+for website in user['selected_websites']:
+    # ...previous code
+    elif 'example.com' in website:
+        products.extend(mynewstore.scraper(user))
 ```
 
 ### D. Test
@@ -245,17 +247,6 @@ pip install --upgrade streamlit requests beautifulsoup4 rich
 
 ---
 
-## 11. Roadmap
-
-- Implement AI suggestion logic (component compatibility filtering)
-- Add US scrapers (Amazon, Newegg, BestBuy) with configurable request pacing
-- Result export (CSV / JSON)
-- Basic pytest suite + GitHub Actions CI
-- Logging standardization (`logging` + optional `rich` handler)
-- Pagination controls & incremental loading
-
----
-
 ## 12. Contributing
 
 1. Fork the repository
@@ -287,8 +278,8 @@ This tool is for educational / research use. You are responsible for ensuring th
 
 ## 15. Contact
 
-Author: <Your Name>
-Contact: <you@example.com>
+Author: Ishat Noor Mahi
+Contact: inmlink.netlify.app
 Issues: Please open a GitHub issue with details & reproduction steps.
 
 ---
