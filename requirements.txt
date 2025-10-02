@@ -1,4 +1,6 @@
-beautifulsoup4
-rich
-requests
-streamlit
+beautifulsoup4==4.12.3
+requests==2.32.3
+streamlit==1.38.0
+rich==13.7.1
+
+# - rich is currently optional (future logging / console enhancements).
