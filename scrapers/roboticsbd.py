@@ -7,7 +7,7 @@ headers = {"User-Agent": "Mozilla/5.0"}
 query = "arduino uno"
 page = 1
 products = []
-
+seen = set()
 
 def scraper(user):
 
@@ -35,7 +35,7 @@ def scraper(user):
 
             price = card.find('span',class_='price').get_text(strip = True).replace(",","").replace("BDT ","")
             price_val = int(price) if price.isdigit() else 0
-            if user["price_min"] <=price_val <= user["price_max"]:
+            if user["price_min"] <= price_val <= user["price_max"]:
                 print( price_val, " in range")
                 final_list.append(card)
         print(len(final_list), " after price filtering")
@@ -51,14 +51,19 @@ def scraper(user):
                 "link": pLink,
                 "price": price
             }
+
             if user["include_img"]:
 
                 img = article.find("img").get("src")
                 product["image"] = img
-            
-            products.append(product)
 
-        
+            log_str = product["title"] + " | " + product["price"]
+            
+            if log_str not in seen:
+                seen.add(log_str)
+                products.append(product)
+
+
 
     # print(products)
 

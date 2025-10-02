@@ -2,6 +2,7 @@ import json
 import os
 from datetime import datetime
 import aggregator
+
 def load_user_config():
     """Load user configuration from Streamlit app"""
     config_file = "user_config.json"

@@ -1,7 +1,7 @@
 {
-    "search_text": "arduino",
+    "search_text": "arduino uno",
     "price_range": {
-        "min": 0,
+        "min": 30,
         "max": 1000
     },
     "region": "Bangladeshi",
