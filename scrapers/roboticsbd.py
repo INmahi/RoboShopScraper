@@ -33,9 +33,11 @@ def scraper(user):
 
             title = article.find("h3",class_="product-title").get_text()
             pLink = article.find("a").get("href")
+            price = article.find("span",class_="price").get_text(strip = True).replace("BDT&nbsp;","BDT ").replace(",","")
             product = {
                 "title": title,
                 "link": pLink,
+                "price": price
             }
             if user["include_img"]:
 
@@ -47,7 +49,7 @@ def scraper(user):
             products.append(product)
 
 
-    print(products)
+    # print(products)
 
 
     return products

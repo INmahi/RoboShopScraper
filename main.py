@@ -36,7 +36,7 @@ def get_ai_response():
 
 
 def main():
-    aggregator.aggregate_products(load_user_config())
+    return aggregator.aggregate_products(load_user_config())
 
 
 

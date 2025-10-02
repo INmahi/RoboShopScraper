@@ -1,8 +1,6 @@
 from scrapers import roboticsbd
 import main
 
-user = main.load_user_config()
-
 
 def aggregate_products(user):
     products = []

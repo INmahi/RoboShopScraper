@@ -152,10 +152,17 @@ def display_products(products, config):
         st.info("🔍 No products found matching your criteria.")
         return
     
+    # Add a nice header with the count
     st.markdown(f'<h2 style="color: #00FFFF;">🛒 Found {len(products)} Products</h2>', unsafe_allow_html=True)
     
-    # Display products in a responsive grid
+    # Add filtering options
+    
+    # Display products in a responsive grid with better spacing
     cols_per_row = 3
+    
+    # Calculate rows needed
+    total_rows = (len(products) + cols_per_row - 1) // cols_per_row
+    
     for i in range(0, len(products), cols_per_row):
         cols = st.columns(cols_per_row)
         
@@ -166,48 +173,82 @@ def display_products(products, config):
                     create_product_card(product, config.get('include_images', False))
     
     # Display summary stats
-    display_summary_stats(products, config)
+    # display_summary_stats(products, config)
 
 def create_product_card(product, include_images):
-    """Create a single product card"""
-    title = product.get('title', 'No Title Available')[:60] + ('...' if len(product.get('title', '')) > 60 else '')
+    """Create a single product card with a clean design"""
+    # Extract product information
+    title = product.get('title', 'No Title Available')
     link = product.get('link', '#')
     image_url = product.get('image', '') if include_images else ''
     
     # Clean and truncate title for display
-    clean_title = title.replace('"', '').replace("'", '')
+    if len(title) > 70:
+        clean_title = title[:70].replace('"', '').replace("'", '') + "..."
+    else:
+        clean_title = title.replace('"', '').replace("'", '')
     
+    # Extract domain for display
+    try:
+        from urllib.parse import urlparse
+        domain = urlparse(link).netloc if link and link != '#' else "Unknown Source"
+    except:
+        domain = "Unknown Source"
+    
+    # Create the card container with a fixed height
     card_html = f'''
-    <div class="result-card" style="height: 400px; display: flex; flex-direction: column;">
+    <div class="result-card" style="height: 350px; display: flex; flex-direction: column; overflow: hidden; position: relative;">
+    '''
+    
+    # Add source badge at the top right
+    card_html += f'''
+    <div style="position: absolute; top: 10px; right: 10px; background: rgba(0, 0, 0, 0.7); 
+                padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; z-index: 10;">
+        <span style="color: #00BFFF;">{domain.replace('www.', '')}</span>
+    </div>
     '''
     
     # Add image if available and enabled
     if image_url and include_images:
         card_html += f'''
-        <div style="text-align: center; margin-bottom: 1rem;">
+        <div style="text-align: center; margin-bottom: 1rem; height: 160px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
             <img src="{image_url}" 
-                 style="max-width: 100%; max-height: 150px; object-fit: contain; border-radius: 8px; border: 1px solid #00FFFF;" 
-                 onerror="this.style.display='none'" />
+                 style="max-width: 100%; max-height: 160px; object-fit: contain; border-radius: 8px; transition: transform 0.3s ease;" 
+                 onerror="this.onerror=null; this.src='https://via.placeholder.com/150x150?text=No+Image'; this.style.opacity='0.5';"
+                 onmouseover="this.style.transform='scale(1.05)'"
+                 onmouseout="this.style.transform='scale(1)'" />
         </div>
         '''
     elif include_images:
         card_html += f'''
-        <div style="text-align: center; margin-bottom: 1rem; height: 150px; background: linear-gradient(135deg, #2D2D2D, #1E1E1E); border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid #00FFFF;">
-            <span style="color: #666; font-size: 0.9rem;">📷 No Image</span>
+        <div style="text-align: center; margin-bottom: 1rem; height: 160px; background: linear-gradient(135deg, #1A1A1A, #0E0E0E); 
+                    border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid #004455;">
+            <span style="color: #666; font-size: 0.9rem;">📷 No Image Available</span>
         </div>
         '''
     
-    # Add title
+    # Add title with hover effect
     card_html += f'''
-        <h4 style="color: #00FFFF; margin-bottom: 1rem; flex-grow: 1; font-size: 0.95rem; line-height: 1.3;">{clean_title}</h4>
+        <div style="flex-grow: 1; overflow: hidden;">
+            <h4 style="color: #00FFFF; margin-bottom: 0.5rem; font-size: 0.95rem; line-height: 1.4; 
+                       transition: color 0.3s ease;" 
+                onmouseover="this.style.color='#FFFFFF'"
+                onmouseout="this.style.color='#00FFFF'">
+                {clean_title}
+            </h4>
+        </div>
     '''
     
-    # Add visit button
+    # Add visit button with enhanced hover effect
     if link != '#':
         card_html += f'''
-        <div style="margin-top: auto;">
-            <a href="{link}" target="_blank" style="text-decoration: none;">
-                <div style="background: linear-gradient(45deg, #00FFFF, #00BFFF); color: #000000; padding: 0.7rem 1rem; border-radius: 8px; text-align: center; font-weight: bold; transition: all 0.3s ease;">
+        <div style="margin-top: auto; padding-top: 0.5rem;">
+            <a href="{link}" target="_blank" style="text-decoration: none;" title="Visit {clean_title}">
+                <div style="background: linear-gradient(45deg, #00FFFF, #00BFFF); color: #000000; 
+                           padding: 0.7rem 1rem; border-radius: 8px; text-align: center; 
+                           font-weight: bold; transition: all 0.3s ease;"
+                     onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(0, 191, 255, 0.4)'"
+                     onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
                     🔗 Visit Product
                 </div>
             </a>
@@ -215,7 +256,7 @@ def create_product_card(product, include_images):
         '''
     else:
         card_html += f'''
-        <div style="margin-top: auto;">
+        <div style="margin-top: auto; padding-top: 0.5rem;">
             <div style="background: #444; color: #888; padding: 0.7rem 1rem; border-radius: 8px; text-align: center;">
                 🔗 Link Not Available
             </div>
@@ -226,53 +267,102 @@ def create_product_card(product, include_images):
     
     st.markdown(card_html, unsafe_allow_html=True)
 
-def display_summary_stats(products, config):
-    """Display summary statistics"""
-    st.markdown("---")
-    col1, col2, col3 = st.columns(3)
+# def display_summary_stats(products, config):
+#     """Display summary statistics with improved error handling"""
+#     st.markdown("---")
+#     col1, col2, col3 = st.columns(3)
     
-    # Count products by source/domain
-    sources = {}
-    for product in products:
-        link = product.get('link', '')
-        if link:
-            try:
-                from urllib.parse import urlparse
-                domain = urlparse(link).netloc
-                sources[domain] = sources.get(domain, 0) + 1
-            except:
-                sources['Unknown'] = sources.get('Unknown', 0) + 1
+#     # Count products by source/domain
+#     sources = {}
+#     with_images = 0
     
-    with col1:
-        st.markdown(f'''
-        <div class="result-card">
-            <h4 style="color: #00BFFF;">📊 Search Statistics</h4>
-            <p>• Total Found: {len(products)}</p>
-            <p>• Sources: {len(sources)} websites</p>
-            <p>• Search Term: "{config.get("search_text", "N/A")}"</p>
-        </div>
-        ''', unsafe_allow_html=True)
+#     for product in products:
+#         # Count products with images
+#         if product.get('image'):
+#             with_images += 1
+            
+#         # Count sources
+#         link = product.get('link', '')
+#         if link:
+#             try:
+#                 from urllib.parse import urlparse
+#                 domain = urlparse(link).netloc
+#                 if domain:
+#                     sources[domain] = sources.get(domain, 0) + 1
+#                 else:
+#                     sources['Unknown'] = sources.get('Unknown', 0) + 1
+#             except:
+#                 sources['Unknown'] = sources.get('Unknown', 0) + 1
     
-    with col2:
-        st.markdown(f'''
-        <div class="result-card">
-            <h4 style="color: #00BFFF;">🌐 Sources</h4>
-        ''', unsafe_allow_html=True)
+#     # Search Statistics Card
+#     with col1:
+#         search_term = config.get("search_text", "")
+#         if len(search_term) > 30:
+#             search_term = search_term[:30] + "..."
+            
+#         st.markdown(f'''
+#         <div class="result-card">
+#             <h4 style="color: #00BFFF;">📊 Search Results</h4>
+#             <p>• Total Found: <span style="color: #00FFFF; font-weight: bold;">{len(products)}</span> products</p>
+#             <p>• With Images: <span style="color: #00FFFF;">{with_images}</span> products</p>
+#             <p>• Search Term: "<span style="color: #00FFFF;">{search_term}</span>"</p>
+#         </div>
+#         ''', unsafe_allow_html=True)
+    
+#     # Sources Card
+#     with col2:
+#         st.markdown(f'''
+#         <div class="result-card">
+#             <h4 style="color: #00BFFF;">🌐 Sources</h4>
+#         ''', unsafe_allow_html=True)
         
-        for source, count in list(sources.items())[:3]:
-            st.markdown(f'<p>• {source}: {count} items</p>', unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+#         if sources:
+#             # Sort sources by count
+#             sorted_sources = sorted(sources.items(), key=lambda x: x[1], reverse=True)
+#             for source, count in sorted_sources[:3]:
+#                 # Clean up domain name for display
+#                 display_source = source.replace('www.', '')
+#                 if len(display_source) > 30:
+#                     display_source = display_source[:27] + "..."
+#                 st.markdown(f'<p>• <span style="color: #00FFFF;">{display_source}</span>: {count} items</p>', unsafe_allow_html=True)
+            
+#             # If there are more sources
+#             if len(sources) > 3:
+#                 remaining = sum([count for _, count in sorted_sources[3:]])
+#                 st.markdown(f'<p>• <span style="color: #888;">+{len(sources) - 3} more sources</span>: {remaining} items</p>', unsafe_allow_html=True)
+#         else:
+#             st.markdown(f'<p style="color: #888;">No source information available</p>', unsafe_allow_html=True)
+            
+#         st.markdown('</div>', unsafe_allow_html=True)
     
-    with col3:
-        st.markdown(f'''
-        <div class="result-card">
-            <h4 style="color: #00BFFF;">🎯 Active Filters</h4>
-            <p>• Price: ৳{config["price_range"]["min"]:,} - ৳{config["price_range"]["max"]:,}</p>
-            <p>• Region: {config.get("region", "N/A")}</p>
-            <p>• Images: {"Enabled" if config.get("include_images") else "Disabled"}</p>
-        </div>
-        ''', unsafe_allow_html=True)
+#     # Active Filters Card
+#     with col3:
+#         # Handle potential missing config values with safe defaults
+#         min_price = config.get("price_range", {}).get("min", 0)
+#         max_price = config.get("price_range", {}).get("max", 100000)
+        
+#         try:
+#             min_price = int(min_price)
+#             max_price = int(max_price)
+#         except (ValueError, TypeError):
+#             min_price = 0
+#             max_price = 100000
+            
+#         region = config.get("region", "N/A")
+#         include_images = config.get("include_images", False)
+        
+#         # Selected websites
+#         selected_websites = config.get("selected_websites", [])
+#         website_count = len(selected_websites) if selected_websites else 0
+            
+#         st.markdown(f'''
+#         <div class="result-card">
+#             <h4 style="color: #00BFFF;">🎯 Active Filters</h4>
+#             <p>• Price Range: <span style="color: #00FFFF;">৳{min_price:,} - ৳{max_price:,}</span></p>
+#             <p>• Region: <span style="color: #00FFFF;">{region}</span></p>
+#             <p>• Websites: <span style="color: #00FFFF;">{website_count}</span> selected</p>
+#         </div>
+#         ''', unsafe_allow_html=True)
 
 def run_streamlit_app():
     # Title
@@ -386,9 +476,18 @@ def run_streamlit_app():
     # Let's Go button
     st.sidebar.markdown("---")
     if st.sidebar.button("🚀 Let's Go!", type="primary", use_container_width=True):
+        # Input validation
+        if not search_text:
+            st.sidebar.error("⚠️ Please enter a search term!")
+            return
+            
+        if not selected_websites:
+            st.sidebar.error("⚠️ Please select at least one website to search!")
+            return
+        
         # Collect all user inputs
         user_config = {
-            "search_text": search_text,
+            "search_text": search_text.strip(),
             "price_range": {
                 "min": price_range[0],
                 "max": price_range[1]
@@ -404,59 +503,75 @@ def run_streamlit_app():
         import json
         import os
         
-        config_file = "user_config.json"
-        with open(config_file, 'w') as f:
-            json.dump(user_config, f, indent=4)
+        try:
+            config_file = "user_config.json"
+            with open(config_file, 'w') as f:
+                json.dump(user_config, f, indent=4)
+        except Exception as e:
+            st.error(f"❌ Error saving configuration: {str(e)}")
+            return
         
        
         
         # Process and display results
         st.markdown("---")
         
+        # Create a container for our results section
+        results_container = st.container()
+        
         # Import and run the aggregator
         try:
             import aggregator
             
             # Create progress indicators
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-            
-            # Step 1: Load configuration
-            status_text.text("📋 Loading configuration...")
-            progress_bar.progress(20)
-            
-            # Step 2: Initialize scraping
-            status_text.text("🔧 Initializing scrapers...")
-            progress_bar.progress(40)
-            
-            # Step 3: Scrape websites
-            status_text.text("🚀 Scraping selected websites...")
-            progress_bar.progress(60)
-            
-            # Get the processed results
-            products = aggregator.aggregate_products(user_config)
-            
-            # Step 4: Processing results
-            status_text.text("📊 Processing results...")
-            progress_bar.progress(80)
-            
-            # Step 5: Complete
-            status_text.text("✅ Complete!")
-            progress_bar.progress(100)
-            
-            # Clear progress indicators
-            progress_bar.empty()
-            status_text.empty()
-            
-            # Display results
-            if products:
-                display_products(products, user_config)
-            else:
-                st.info("🔍 No products found matching your criteria. Try different search terms or adjust your filters.")
+            with results_container:
+                progress_placeholder = st.empty()
+                status_placeholder = st.empty()
+                
+                with progress_placeholder:
+                    progress_bar = st.progress(0)
+                
+                with status_placeholder:
+                    status_text = st.empty().text("📋 Loading configuration...")
+                
+                # Step 1: Load configuration
+                progress_bar.progress(20)
+                status_text.text("🔧 Initializing scrapers...")
+                
+                # Step 2: Initialize scraping
+                progress_bar.progress(40)
+                status_text.text("🚀 Scraping selected websites...")
+                
+                # Step 3: Scrape websites
+                progress_bar.progress(60)
+                
+                # Get the processed results through main.py
+                import main
+                products = main.main()
+                
+                # Step 4: Processing results
+                progress_bar.progress(80)
+                status_text.text("📊 Processing results...")
+                
+                # Step 5: Complete
+                progress_bar.progress(100)
+                status_text.text("✅ Complete!")
+                
+                # Clear progress indicators after a short delay
+                import time
+                time.sleep(0.5)
+                progress_placeholder.empty()
+                status_placeholder.empty()
+                
+                # Display results in the results container
+                if products and len(products) > 0:
+                    display_products(products, user_config)
+                else:
+                    st.info("🔍 No products found matching your criteria. Try different search terms or adjust your filters.")
                 
         except Exception as e:
             st.error(f"❌ Error processing results: {str(e)}")
-            st.info("💡 Please check your aggregator.py file and ensure all dependencies are installed.")
+            st.info("💡 Please check your scraper implementation and ensure all dependencies are installed.")
     
     # Main content area - Default state
     else:
