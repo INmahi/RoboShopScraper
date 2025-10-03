@@ -2,7 +2,7 @@ import json
 import os
 from datetime import datetime
 import aggregator
-
+import productSuggestion
 def load_user_config():
     """Load user configuration from Streamlit app"""
     config_file = "user_config.json"
@@ -37,7 +37,27 @@ def get_ai_response():
 
 
 def main():
-    return aggregator.aggregate_products(load_user_config())
+    cfg = load_user_config()
+    if not cfg:
+        return []
+    ai_mode = cfg.get("ai_mode")
+    products = aggregator.aggregate_products(cfg)
+
+    # If AI mode is off, ensure no stale 'compatible' flags leak into UI
+    if not ai_mode:
+        for p in products:
+            if isinstance(p, dict) and 'compatible' in p:
+                # remove rather than force False so UI can hide badge entirely
+                try:
+                    del p['compatible']
+                except Exception:
+                    pass
+        return products
+
+    # When AI mode on, flag items (only consult model/fallback here)
+    components = cfg.get("components") or ""
+    products_flagged = productSuggestion.flag_items(products, components)
+    return products_flagged
 
 
 

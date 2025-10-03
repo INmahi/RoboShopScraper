@@ -164,16 +164,20 @@ def display_products(products, config):
             p['numeric_price'] = int(''.join(digits)) if digits else 0
 
     sort_choice = st.selectbox(
-        "Sort products by",
-        ["Original", "Price: Low to High", "Price: High to Low"],
+        "Sort / Filter",
+        ["Original", "Price: Low to High", "Price: High to Low", "Only Compatible"],
         index=0,
-        help="Choose how to order the results"
+        help="Choose ordering or filter to show only compatible products"
     )
 
     if sort_choice == "Price: Low to High":
         products = sorted(products, key=lambda x: x.get('numeric_price', 0))
     elif sort_choice == "Price: High to Low":
         products = sorted(products, key=lambda x: x.get('numeric_price', 0), reverse=True)
+    elif sort_choice == "Only Compatible":
+        products = [p for p in products if p.get('compatible')]
+        if not products:
+            st.warning("No compatible products found for current criteria.")
 
     cols_per_row = 3
     include_images = config.get('include_images', False)
@@ -189,12 +193,13 @@ def display_products(products, config):
 
 
 def create_product_card(product, include_images: bool):
-    """Render a single product card with domain-based accent color."""
+    """Render a single product card with domain-based accent color and compatibility badge."""
     title = product.get("title", "No Title Available")
     link = product.get("link", "#")
     price = product.get("price") or "Price N/A"
     image_url = product.get("image") if include_images else None
-
+    # Only show compatibility if key exists (added only when AI mode enabled)
+    compatible = product.get('compatible', None)
     clean_title = (title[:70] + "...") if len(title) > 70 else title
 
     from urllib.parse import urlparse
@@ -219,12 +224,35 @@ def create_product_card(product, include_images: bool):
     base_color, light_color = palette[idx]
 
     parts: list[str] = []
+    # Compatibility styling adjustments
+    if compatible is True:
+        badge_text = '✅ Compatible'
+        comp_color = '#16a34a'  # green
+        outline_glow = '#16a34a'
+    elif compatible is False:
+        badge_text = '⚠️ Not Compatible'
+        comp_color = '#dc2626'  # red
+        outline_glow = '#dc2626'
+    else:
+        badge_text = ' ℹ️  '
+        comp_color = base_color
+        outline_glow = base_color
+
+    card_border = comp_color if compatible is not None else base_color
+    shadow_color = outline_glow + '55'
+
     parts.append(
-        f'<div class="result-card" style="display:flex;flex-direction:column;min-height:360px;position:relative;border-color:{base_color};box-shadow:0 0 14px {base_color}33;">'
+        f'<div class="result-card" style="display:flex;flex-direction:column;min-height:360px;position:relative;border-color:{card_border};box-shadow:0 0 18px {shadow_color};">'
     )
+    # domain badge
     parts.append(
         f'<div style="position:absolute;top:8px;right:8px;background:{base_color}22;padding:4px 8px;border:1px solid {base_color};border-radius:14px;font-size:11px;color:{base_color};font-weight:600;">🛍️ {short_domain}</div>'
     )
+    # compatibility badge (render only if AI mode produced a flag)
+    if 'compatible' in product:
+        parts.append(
+            f'<div style="position:absolute;top:8px;left:8px;background:{comp_color}22;padding:4px 10px;border:1px solid {comp_color};border-radius:14px;font-size:11px;color:{comp_color};font-weight:600;backdrop-filter:blur(3px);">{badge_text}</div>'
+        )
 
     if include_images:
         if image_url:
@@ -369,7 +397,7 @@ def run_streamlit_app():
     if ai_mode:
         ai_suggestions = st.sidebar.text_area(
             "AI Search Components:",
-            placeholder="Enter additional Components to get the best compatible products...",
+            placeholder="Enter additional Components to get the best compatible products [Comma seperated]",
             height=100,
             help="Add specific components for AI to consider in the search"
         )

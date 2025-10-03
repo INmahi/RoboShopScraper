@@ -1,5 +1,5 @@
 {
-    "search_text": "arduino uno",
+    "search_text": "L293d shield",
     "price_range": {
         "min": 0,
         "max": 100000
@@ -9,7 +9,7 @@
         "https://www.store.roboticsbd.com/",
         "https://roboticsshop.com.bd/"
     ],
-    "include_images": true,
+    "include_images": false,
     "ai_mode": false,
     "ai_suggestions": null
 }
