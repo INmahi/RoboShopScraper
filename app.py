@@ -165,19 +165,16 @@ def display_products(products, config):
 
     sort_choice = st.selectbox(
         "Sort / Filter",
-        ["Original", "Price: Low to High", "Price: High to Low", "Only Compatible"],
+        ["Original", "Price: Low to High", "Price: High to Low"],
         index=0,
-        help="Choose ordering or filter to show only compatible products"
+        help="Choose ordering of the results"
     )
 
     if sort_choice == "Price: Low to High":
         products = sorted(products, key=lambda x: x.get('numeric_price', 0))
     elif sort_choice == "Price: High to Low":
         products = sorted(products, key=lambda x: x.get('numeric_price', 0), reverse=True)
-    elif sort_choice == "Only Compatible":
-        products = [p for p in products if p.get('compatible')]
-        if not products:
-            st.warning("No compatible products found for current criteria.")
+    # Removed "Only Compatible" filter as AI compatibility feature is disabled
 
     cols_per_row = 3
     include_images = config.get('include_images', False)
@@ -193,13 +190,11 @@ def display_products(products, config):
 
 
 def create_product_card(product, include_images: bool):
-    """Render a single product card with domain-based accent color and compatibility badge."""
+    """Render a single product card with domain-based accent color."""
     title = product.get("title", "No Title Available")
     link = product.get("link", "#")
     price = product.get("price") or "Price N/A"
     image_url = product.get("image") if include_images else None
-    compatible = product.get('compatible')
-    print(compatible)
     clean_title = (title[:70] + "...") if len(title) > 70 else title
 
     from urllib.parse import urlparse
@@ -224,21 +219,9 @@ def create_product_card(product, include_images: bool):
     base_color, light_color = palette[idx]
 
     parts: list[str] = []
-    # Compatibility styling adjustments
-    if compatible is True:
-        badge_text = '✅ Compatible'
-        comp_color = '#16a34a'  # green
-        outline_glow = '#16a34a'
-    elif compatible is False:
-        badge_text = '⚠️ Not Compatible'
-        comp_color = '#dc2626'  # red
-        outline_glow = '#dc2626'
-    else:
-        badge_text = ' ℹ️  '
-        comp_color = base_color
-        outline_glow = base_color
-
-    card_border = comp_color if compatible is not None else base_color
+    # Simplified styling (no AI compatibility state)
+    card_border = base_color
+    outline_glow = base_color
     shadow_color = outline_glow + '55'
 
     parts.append(
@@ -248,10 +231,7 @@ def create_product_card(product, include_images: bool):
     parts.append(
         f'<div style="position:absolute;top:8px;right:8px;background:{base_color}22;padding:4px 8px;border:1px solid {base_color};border-radius:14px;font-size:11px;color:{base_color};font-weight:600;">🛍️ {short_domain}</div>'
     )
-    # compatibility badge
-    parts.append(
-        f'<div style="position:absolute;top:8px;left:8px;background:{comp_color}22;padding:4px 10px;border:1px solid {comp_color};border-radius:14px;font-size:11px;color:{comp_color};font-weight:600;backdrop-filter:blur(3px);">{badge_text}</div>'
-    )
+    # Compatibility badge removed (feature disabled)
 
     if include_images:
         if image_url:
@@ -381,33 +361,7 @@ def run_streamlit_app():
     if not selected_websites:
         st.sidebar.warning("⚠️ Please select at least one website!")
     
-    # AI Compatibility Check
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("🤖 **AI Compatibility Check**")
-    
-    ai_mode = st.sidebar.checkbox(
-        "Enable AI Suggestions",
-        value=False,
-        help="Enable AI-powered search suggestions and compatibility checks"
-    )
-    
-    # AI suggestion text field (only enabled when AI mode is on)
-    ai_suggestions = ""
-    if ai_mode:
-        ai_suggestions = st.sidebar.text_area(
-            "AI Search Components:",
-            placeholder="Enter additional Components to get the best compatible products [Comma seperated]",
-            height=100,
-            help="Add specific components for AI to consider in the search"
-        )
-    else:
-        st.sidebar.text_area(
-            "AI Search Components:",
-            placeholder="Enable AI mode to use this feature...",
-            height=100,
-            disabled=True,
-            help="Enable AI mode above to use this feature"
-        )
+    # AI Compatibility Check removed
     
     # Let's Go button
     st.sidebar.markdown("---")
@@ -430,9 +384,7 @@ def run_streamlit_app():
             },
             "region": region,
             "selected_websites": selected_websites,
-            "include_images": include_images,
-            "ai_mode": ai_mode,
-            "ai_suggestions": ai_suggestions if ai_mode else None
+            "include_images": include_images
         }
         
         # Save config to JSON file for main.py
