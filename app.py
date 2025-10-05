@@ -198,8 +198,8 @@ def create_product_card(product, include_images: bool):
     link = product.get("link", "#")
     price = product.get("price") or "Price N/A"
     image_url = product.get("image") if include_images else None
-    # Only show compatibility if key exists (added only when AI mode enabled)
-    compatible = product.get('compatible', None)
+    compatible = product.get('compatible')
+    print(compatible)
     clean_title = (title[:70] + "...") if len(title) > 70 else title
 
     from urllib.parse import urlparse
@@ -248,11 +248,10 @@ def create_product_card(product, include_images: bool):
     parts.append(
         f'<div style="position:absolute;top:8px;right:8px;background:{base_color}22;padding:4px 8px;border:1px solid {base_color};border-radius:14px;font-size:11px;color:{base_color};font-weight:600;">🛍️ {short_domain}</div>'
     )
-    # compatibility badge (render only if AI mode produced a flag)
-    if 'compatible' in product:
-        parts.append(
-            f'<div style="position:absolute;top:8px;left:8px;background:{comp_color}22;padding:4px 10px;border:1px solid {comp_color};border-radius:14px;font-size:11px;color:{comp_color};font-weight:600;backdrop-filter:blur(3px);">{badge_text}</div>'
-        )
+    # compatibility badge
+    parts.append(
+        f'<div style="position:absolute;top:8px;left:8px;background:{comp_color}22;padding:4px 10px;border:1px solid {comp_color};border-radius:14px;font-size:11px;color:{comp_color};font-weight:600;backdrop-filter:blur(3px);">{badge_text}</div>'
+    )
 
     if include_images:
         if image_url:
