@@ -9,7 +9,5 @@
         "https://www.store.roboticsbd.com/",
         "https://roboticsshop.com.bd/"
     ],
-    "include_images": true,
-    "ai_mode": false,
-    "ai_suggestions": null
+    "include_images": true
 }

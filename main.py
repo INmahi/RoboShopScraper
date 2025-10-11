@@ -33,9 +33,6 @@ def load_user_config():
         return None
 
 
-def get_ai_response():
-    pass
-
 
 def main():
     cfg = load_user_config()
