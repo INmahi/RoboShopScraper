@@ -106,7 +106,7 @@ st.markdown("""
         border-radius: 12px;
         padding: 1.5rem;
         margin: 1rem 0;
-        box-shadow: 0 0 20px #00FFFF20;
+        box-shadow: 0 !important;
         transition: all 0.3s ease;
     }
     
@@ -207,7 +207,7 @@ def create_product_card(product, include_images: bool):
     # Deterministic color palette mapping
     palette = [
         ("#FA9320", "#ffb469"),  # orange
-        ("#2ECC71", "#6DFFB0"),  # green
+        ("#21A95A", "#45A885"),  # green
         ("#3498DB", "#7FC6FF"),  # blue
         ("#9B59B6", "#D7A8FF"),  # purple
         ("#E74C3C", "#FF9A8F"),  # red
@@ -217,6 +217,7 @@ def create_product_card(product, include_images: bool):
     # Hash domain to select color
     idx = sum(ord(c) for c in short_domain) % len(palette)
     base_color, light_color = palette[idx]
+    action_btn = palette[1]
 
     parts: list[str] = []
     # Simplified styling (no AI compatibility state)
@@ -225,7 +226,7 @@ def create_product_card(product, include_images: bool):
     shadow_color = outline_glow + '55'
 
     parts.append(
-        f'<div class="result-card" style="display:flex;flex-direction:column;min-height:360px;position:relative;border-color:{card_border};box-shadow:0 0 18px {shadow_color};">'
+        f'<div class="result-card" style="display:flex;flex-direction:column;min-height:360px;position:relative;border-color:{card_border};">'
     )
     # domain badge
     parts.append(
@@ -270,7 +271,8 @@ def create_product_card(product, include_images: bool):
     if link and link != "#":
         parts.append(
             f'<a href="{link}" target="_blank" rel="noopener" style="text-decoration:none;margin-top:auto;">'
-            f'<div style="background:linear-gradient(135deg,{base_color},{light_color});color:#111;font-weight:650;text-align:center;padding:10px 12px;border-radius:8px;font-size:0.85rem;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:6px;">🔗 Visit</div>'
+            f'<div style="background:linear-gradient(135deg,{base_color},{light_color});color:#111;font-weight:650;text-align:center;padding:10px 12px;border-radius:8px;font-size:0.85rem;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:5px;">🔗 Visit</div>'
+            f'<div style="background:linear-gradient(135deg,{action_btn[0]},{action_btn[1]});color:#111;font-weight:650;text-align:center;padding:10px 12px;border-radius:8px;font-size:0.85rem;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:6px;">🛒 Add To Cart</div>'
             '</a>'
         )
     else:
