@@ -1,3 +1,5 @@
 user_config.json
 copy50/
 secrets.json
+.pytest_cache
+__pycache__

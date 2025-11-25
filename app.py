@@ -1,6 +1,83 @@
 import streamlit as st
 import json
+import os
 from scrapers.sites import sites
+
+# Cart management functions
+def load_cart():
+    """Load cart data from JSON file"""
+    try:
+        if os.path.exists('cart.json'):
+            with open('cart.json', 'r') as f:
+                return json.load(f)
+        return {}
+    except Exception:
+        return {}
+
+def save_cart(cart_data):
+    """Save cart data to JSON file"""
+    try:
+        with open('cart.json', 'w') as f:
+            json.dump(cart_data, f, indent=2)
+        return True
+    except Exception:
+        return False
+
+def add_to_cart(product_id, title, price, image_url, link):
+    """Add or update product in cart"""
+    cart = load_cart()
+    
+    # Extract numeric price
+    import re
+    numeric_price = 0
+    if price and price != "Price N/A":
+        digits = re.findall(r'\d+', str(price))
+        numeric_price = int(''.join(digits)) if digits else 0
+    
+    if product_id in cart:
+        # Update existing item
+        cart[product_id]['quantity'] += 1
+        cart[product_id]['total_price'] = cart[product_id]['quantity'] * numeric_price
+    else:
+        # Add new item
+        cart[product_id] = {
+            'title': title,
+            'price': price,
+            'numeric_price': numeric_price,
+            'image_url': image_url,
+            'link': link,
+            'quantity': 1,
+            'total_price': numeric_price
+        }
+    
+    return save_cart(cart)
+
+def get_cart_summary():
+    """Get cart summary with total items and price"""
+    cart = load_cart()
+    total_items = sum(item['quantity'] for item in cart.values())
+    total_price = sum(item['total_price'] for item in cart.values())
+    return total_items, total_price, cart
+
+def remove_from_cart(product_id):
+    """Remove product from cart"""
+    cart = load_cart()
+    if product_id in cart:
+        del cart[product_id]
+        return save_cart(cart)
+    return False
+
+def update_quantity(product_id, new_quantity):
+    """Update product quantity in cart"""
+    cart = load_cart()
+    if product_id in cart and new_quantity > 0:
+        cart[product_id]['quantity'] = new_quantity
+        cart[product_id]['total_price'] = cart[product_id]['quantity'] * cart[product_id]['numeric_price']
+        return save_cart(cart)
+    elif product_id in cart and new_quantity <= 0:
+        return remove_from_cart(product_id)
+    return False
+
 # Page configuration
 st.set_page_config(
     page_title="RoboShop Scraper",
@@ -17,30 +94,25 @@ st.markdown("""
         background-color: #0E1117;
         color: #FAFAFA;
     }
-    
+
     /* Sidebar Styling */
     .css-1d391kg {
         background-color: #1E1E1E;
         border-right: 2px solid #00FFFF;
     }
-    
+
     /* Main content area */
     .main .block-container {
         background-color: #0E1117;
         padding-top: 2rem;
     }
-    
+
     /* Headers */
     h1, h2, h3 {
         color: #00FFFF !important;
         font-family: 'Arial', sans-serif;
     }
-    
-    /* Sidebar headers */
-    .css-1d391kg h1, .css-1d391kg h2, .css-1d391kg h3 {
-        color: #00BFFF !important;
-    }
-    
+
     /* Input fields */
     .stTextInput > div > div > input {
         background-color: #262626;
@@ -48,28 +120,24 @@ st.markdown("""
         color: #FAFAFA;
         border-radius: 8px;
     }
-    
+
     .stTextInput > div > div > input:focus {
         border-color: #00BFFF;
         box-shadow: 0 0 15px #00BFFF50;
     }
-    
-    /* Sliders */
-    .stSlider > div > div > div > div {
-        background-color: #00FFFF;
-    }
-    
-    .stSlider > div > div > div > div > div {
-        background-color: #00BFFF;
-    }
-    
+
     /* Select boxes */
     .stSelectbox > div > div > div {
         background-color: #262626;
         border: 2px solid #00FFFF;
         color: #FAFAFA;
     }
-    
+
+    /* Checkboxes */
+    .stCheckbox > label {
+        color: #FAFAFA !important;
+    }
+
     /* Buttons */
     .stButton > button {
         background: linear-gradient(45deg, #00FFFF, #00BFFF);
@@ -80,68 +148,172 @@ st.markdown("""
         box-shadow: 0 0 20px #00FFFF50;
         transition: all 0.3s ease;
     }
-    
+
     .stButton > button:hover {
         box-shadow: 0 0 30px #00FFFF80;
         transform: translateY(-2px);
     }
-    
-    /* Toggle buttons */
-    .stCheckbox > label {
-        color: #FAFAFA !important;
-    }
-    
-    /* Text areas */
-    .stTextArea > div > div > textarea {
-        background-color: #262626;
-        border: 2px solid #00FFFF;
-        color: #FAFAFA;
-        border-radius: 8px;
-    }
-    
-    /* Cards for results */
-    .result-card {
+
+    /* Product Cards - Fixed overflow issues */
+    .product-card {
         background: linear-gradient(135deg, #1E1E1E, #2D2D2D);
+        border-radius: 12px;
+        padding: 1rem;
+        margin: 0.5rem 0 0.25rem 0;
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+        display: flex;
+        flex-direction: column;
+        height: 360px;
+        overflow: hidden;
+        box-sizing: border-box;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .product-card:hover {
+        box-shadow: 0 0 30px rgba(0, 191, 255, 0.4);
+        transform: translateY(-3px);
+    }
+
+    .product-image {
+        flex: 0 0 140px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        margin-bottom: 0.5rem;
+    }
+
+    .product-image img {
+        max-width: 100%;
+        max-height: 140px;
+        object-fit: contain;
+        border-radius: 6px;
+    }
+
+    .product-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    .product-title {
+        font-size: 0.9rem;
+        line-height: 1.3;
+        margin: 0 0 0.5rem 0;
+        word-wrap: break-word;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+    }
+
+    .product-price {
+        font-size: 1rem;
+        font-weight: bold;
+        margin: 0.5rem 0;
+    }
+
+    .product-buttons {
+        margin-top: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .visit-button {
+        text-decoration: none;
+        display: block;
+    }
+
+    .visit-button-inner {
+        text-align: center;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        transition: all 0.2s ease;
+    }
+
+    .domain-badge {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        padding: 2px 6px;
+        border-radius: 10px;
+        font-size: 10px;
+        font-weight: 600;
+        z-index: 1;
+    }
+
+    /* Add to Cart button styling */
+    .stButton {
+        margin-top: 0.5rem !important;
+    }
+
+    /* Cart styles */
+    .cart-item {
+        background: linear-gradient(135deg, #1E1E1E, #2D2D2D);
+        border: 1px solid #00FFFF40;
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 0.5rem 0;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .cart-item img {
+        width: 60px;
+        height: 60px;
+        object-fit: contain;
+        border-radius: 4px;
+        border: 1px solid #00FFFF40;
+    }
+
+    .cart-summary {
+        background: linear-gradient(135deg, #2D2D2D, #1E1E1E);
         border: 2px solid #00FFFF;
         border-radius: 12px;
         padding: 1.5rem;
         margin: 1rem 0;
-        box-shadow: 0 !important;
+        text-align: center;
+    }
+
+    .view-cart-btn {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        background: linear-gradient(45deg, #00FFFF, #00BFFF);
+        color: #000;
+        padding: 10px 15px;
+        border-radius: 25px;
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+        font-weight: bold;
+        text-decoration: none;
+        font-size: 14px;
         transition: all 0.3s ease;
     }
-    
-    .result-card:hover {
-        border-color: #00BFFF;
-        box-shadow: 0 0 30px #00BFFF30;
-        transform: translateY(-5px);
+
+    .view-cart-btn:hover {
+        box-shadow: 0 0 25px rgba(0, 255, 255, 0.8);
+        transform: translateY(-2px);
     }
-    
-    /* Price tags */
-    .price-tag {
-       
-        color: #FA9320;
-        padding: 0.5rem 1rem;
-      
-        font-weight: bold;
-        display: inline-block;
-        margin: 0.5rem 0;
-    }
-    
-    /* Responsive design */
+
     @media (max-width: 768px) {
         .main .block-container {
             padding-left: 1rem;
             padding-right: 1rem;
         }
-    }
-    
-
-    
-    /* Success message styling */
-    .stSuccess {
-        background-color: #1E3A1E;
-        border: 2px solid #00FF00;
-        color: #00FF00;
+        .product-card {
+            height: 320px;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -185,17 +357,17 @@ def display_products(products, config):
             idx = i + j
             if idx < len(products):
                 with cols[j]:
-                    create_product_card(products[idx], include_images)
+                    create_product_card(products[idx], include_images, idx)
     # end for
 
 
-def create_product_card(product, include_images: bool):
-    """Render a single product card with domain-based accent color."""
+def create_product_card(product, include_images: bool, index: int):
+    """Create a clean, well-structured product card with proper overflow handling"""
     title = product.get("title", "No Title Available")
     link = product.get("link", "#")
     price = product.get("price") or "Price N/A"
     image_url = product.get("image") if include_images else None
-    clean_title = (title[:70] + "...") if len(title) > 70 else title
+    clean_title = (title[:80] + "...") if len(title) > 80 else title
 
     from urllib.parse import urlparse
     try:
@@ -204,7 +376,7 @@ def create_product_card(product, include_images: bool):
         domain = "unknown"
     short_domain = domain.replace('www.', '')
 
-    # Deterministic color palette mapping
+    # Color palette for different domains
     palette = [
         ("#FA9320", "#ffb469"),  # orange
         ("#21A95A", "#45A885"),  # green
@@ -214,75 +386,129 @@ def create_product_card(product, include_images: bool):
         ("#F1C40F", "#FFE680"),  # yellow
         ("#1ABC9C", "#6EF5DF"),  # teal
     ]
-    # Hash domain to select color
     idx = sum(ord(c) for c in short_domain) % len(palette)
     base_color, light_color = palette[idx]
-    action_btn = palette[1]
 
-    parts: list[str] = []
-    # Simplified styling (no AI compatibility state)
-    card_border = base_color
-    outline_glow = base_color
-    shadow_color = outline_glow + '55'
-
-    parts.append(
-        f'<div class="result-card" style="display:flex;flex-direction:column;min-height:360px;position:relative;border-color:{card_border};">'
-    )
-    # domain badge
-    parts.append(
-        f'<div style="position:absolute;top:8px;right:8px;background:{base_color}22;padding:4px 8px;border:1px solid {base_color};border-radius:14px;font-size:11px;color:{base_color};font-weight:600;">🛍️ {short_domain}</div>'
-    )
-    # Compatibility badge removed (feature disabled)
-
+    # Build image HTML
+    image_html = ""
     if include_images:
         if image_url:
-            parts.append(
-                '<div style="flex:0 0 150px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;overflow:hidden;">'
-                f'<img alt="{clean_title}" src="{image_url}" style="max-width:100%;max-height:150px;object-fit:contain;border-radius:6px;border:1px solid {base_color}55;" '
-                "onerror=\"this.onerror=null;this.style.display='none';\" />"
-                '</div>'
-            )
+            image_html = f'<div class="product-image"><img src="{image_url}" alt="{clean_title}" style="border: 1px solid {base_color}55;" onerror="this.style.display=\'none\'"/></div>'
         else:
-            parts.append(
-                f'<div style="flex:0 0 150px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;border:1px dashed {base_color};border-radius:6px;color:{base_color};font-size:13px;opacity:0.7;">No Image</div>'
+            image_html = f'<div class="product-image"><div style="border: 1px dashed {base_color}; color: {base_color}; opacity: 0.7; padding: 2rem; text-align: center; font-size: 12px;">No Image</div></div>'
+    
+    # Create the complete product card HTML structure
+    card_html = f'''
+    <div class="product-card" style="border: 2px solid {base_color};">
+        <div class="domain-badge" style="background: {base_color}22; border: 1px solid {base_color}; color: {base_color};">🛍️ {short_domain}</div>
+        {image_html}
+        <div class="product-content">
+            <div class="product-title" style="color: {base_color};">📦 {clean_title}</div>
+            <div class="product-price" style="color: {base_color};">💰 {price}</div>
+            <div class="product-buttons">
+                <a href="{link}" target="_blank" rel="noopener" class="visit-button">
+                    <div class="visit-button-inner" style="background: linear-gradient(135deg, {base_color}, {light_color}); color: #111;">🔗 Visit</div>
+                </a>
+            </div>
+        </div>
+    </div>
+    '''
+    
+    with st.container():
+        # Render the complete card structure
+        st.markdown(card_html, unsafe_allow_html=True)
+        
+        # Add to Cart button using Streamlit button (outside the card HTML)
+        if st.button("🛒 Add To Cart", key=f"add_to_cart_{index}", help="Add this product to your cart"):
+            # Create unique product ID
+            product_id = f"{short_domain}_{title.replace(' ', '_')[:30]}_{index}"
+            
+            # Add to cart
+            if add_to_cart(product_id, title, price, image_url or "", link):
+                st.success(f"✅ Added '{clean_title}' to cart!")
+                st.rerun()  # Refresh to update cart count
+            else:
+                st.error("❌ Failed to add item to cart")
+
+
+
+def display_cart():
+    """Display cart contents with management options"""
+    st.markdown('<h2 style="color: #00FFFF;">🛒 Shopping Cart</h2>', unsafe_allow_html=True)
+    
+    total_items, total_price, cart = get_cart_summary()
+    
+    if not cart:
+        st.info("🛒 Your cart is empty")
+        return
+    
+    # Cart summary
+    st.markdown(f'''
+    <div class="cart-summary">
+        <h3 style="color: #00FFFF; margin: 0 0 0.5rem 0;">Cart Summary</h3>
+        <p style="color: #FA9320; font-size: 1.2rem; margin: 0;">Total Items: <strong>{total_items}</strong></p>
+        <p style="color: #21A95A; font-size: 1.4rem; margin: 0.5rem 0 0 0;">Total Price: <strong>BDT {total_price:,}</strong></p>
+    </div>
+    ''', unsafe_allow_html=True)
+    
+    # Cart items
+    st.markdown("### Items in Cart")
+    
+    for product_id, item in cart.items():
+        col1, col2, col3, col4 = st.columns([1, 3, 1, 1])
+        
+        with col1:
+            if item['image_url']:
+                st.markdown(f'<img src="{item["image_url"]}" style="width: 60px; height: 60px; object-fit: contain; border-radius: 4px; border: 1px solid #00FFFF40;">', unsafe_allow_html=True)
+            else:
+                st.markdown('<div style="width: 60px; height: 60px; background: #333; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #666;">No Image</div>', unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown(f'<div><strong style="color: #00FFFF;">{item["title"][:50]}...</strong></div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="color: #FA9320;">Price: {item["price"]} each</div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="color: #21A95A;">Total: BDT {item["total_price"]:,}</div>', unsafe_allow_html=True)
+        
+        with col3:
+            new_quantity = st.number_input(
+                "Qty",
+                min_value=0,
+                value=item['quantity'],
+                key=f"qty_{product_id}",
+                help="Set to 0 to remove"
             )
-
-    parts.append(
-        f'<div style="flex-grow:1;">'
-        f'<h4 style="margin:0 0 8px 0;color:{base_color};font-size:0.97rem;line-height:1.35;">📦 {clean_title}</h4>'
-        '</div>'
-    )
-
-    # Determine plain text color for price based on specific domains
-    price_color = base_color  # default fallback
-    ld = short_domain.lower()
-    if 'roboticsbd' in ld:
-        price_color = '#F1C40F'  # yellow
-    elif 'roboticsshop' in ld or 'robotics-shop' in ld or 'roboticsshop' in ld:
-        price_color = '#3498DB'  # blue
-
-    # Plain text price (no box, no bg, no shadow, no pill)
-    parts.append(
-        f'<div style="margin:2px 0 14px 0;">'
-        f'<span style="color:{price_color};font-size:16px;font-weight:700;letter-spacing:0.4px;">💰 {price}</span>'
-        '</div>'
-    )
-
-    if link and link != "#":
-        parts.append(
-            f'<a href="{link}" target="_blank" rel="noopener" style="text-decoration:none;margin-top:auto;">'
-            f'<div style="background:linear-gradient(135deg,{base_color},{light_color});color:#111;font-weight:650;text-align:center;padding:10px 12px;border-radius:8px;font-size:0.85rem;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:5px;">🔗 Visit</div>'
-            f'<div style="background:linear-gradient(135deg,{action_btn[0]},{action_btn[1]});color:#111;font-weight:650;text-align:center;padding:10px 12px;border-radius:8px;font-size:0.85rem;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:6px;">🛒 Add To Cart</div>'
-            '</a>'
-        )
-    else:
-        parts.append('<div style="margin-top:auto;background:#333;color:#777;text-align:center;padding:10px 12px;border-radius:8px;font-size:0.85rem;">Link Not Available</div>')
-
-    parts.append('</div>')
-    st.markdown("".join(parts), unsafe_allow_html=True)
-
+            if new_quantity != item['quantity']:
+                if update_quantity(product_id, new_quantity):
+                    st.rerun()
+        
+        with col4:
+            if st.button("🗑️", key=f"remove_{product_id}", help="Remove from cart"):
+                if remove_from_cart(product_id):
+                    st.success("Item removed!")
+                    st.rerun()
+            
+            if item['link'] != "#":
+                st.markdown(f'<a href="{item["link"]}" target="_blank" style="color: #00BFFF;">🔗 Visit</a>', unsafe_allow_html=True)
 
 def run_streamlit_app():
+    # Get cart summary for floating button
+    total_items, total_price, _ = get_cart_summary()
+    
+    # Floating cart button
+    if total_items > 0:
+        st.markdown(f'''
+        <div class="view-cart-btn" onclick="document.querySelector('[data-testid=\"stSidebar\"] button[kind=\"secondary\"]').click();">
+            🛒 Cart ({total_items}) - BDT {total_price:,}
+        </div>
+        ''', unsafe_allow_html=True)
+    
+    # Sidebar navigation
+    with st.sidebar:
+        page = st.radio("Navigation", ["🏠 Home", "🛒 Cart"], key="navigation")
+    
+    if page == "🛒 Cart":
+        display_cart()
+        return
+    
     # Title
     st.markdown('<h1 style="color: #00FFFF;">🤖 RoboShop Scraper</h1>', unsafe_allow_html=True)
     st.markdown('<h3 style="color: #00BFFF; margin-bottom: 2rem;">Find the best deals across multiple platforms</h3>', unsafe_allow_html=True)
@@ -402,7 +628,6 @@ def run_streamlit_app():
             return
         
        
-        
         # Process and display results
         st.markdown("---")
         
@@ -436,8 +661,8 @@ def run_streamlit_app():
                 progress_bar.progress(60)
                 
                 # Get the processed results through main.py
-                import main
-                products = main.main()
+                import project
+                products = project.main()
 
                 # Persist results & config in session state
                 st.session_state["results_products"] = products
@@ -478,7 +703,7 @@ def run_streamlit_app():
             # Welcome message when no search is performed yet
             st.markdown('<h2 style="color: #00FFFF;">🔍 Ready to Search</h2>', unsafe_allow_html=True)
             st.markdown("""
-            <div class="result-card" style="text-align: center; padding: 3rem;">
+            <div class="product-card" style="text-align: center; padding: 3rem; border: 2px solid #00FFFF;">
                 <h3 style="color: #00BFFF; margin-bottom: 1.5rem;">Configure your search and click "Let's Go!" to start</h3>
                 <p style="color: #CCCCCC; font-size: 1.1rem; line-height: 1.6;">
                     📝 Enter your search terms<br>

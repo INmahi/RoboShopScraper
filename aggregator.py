@@ -1,6 +1,6 @@
 
 from scrapers import roboticsbd, roboticsshop
-import main
+import project
 
 
 def aggregate_products(user):
@@ -21,5 +21,6 @@ def aggregate_products(user):
 
 
 if __name__ == "__main__":
-    print(aggregate_products(main.load_user_config()))
-    
+    print(aggregate_products(project.load_user_config()))
+ 
+
