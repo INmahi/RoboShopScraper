@@ -5,23 +5,15 @@ from scrapers.sites import sites
 
 # Cart management functions
 def load_cart():
-    """Load cart data from JSON file"""
-    try:
-        if os.path.exists('cart.json'):
-            with open('cart.json', 'r') as f:
-                return json.load(f)
-        return {}
-    except Exception:
-        return {}
+    """Load cart data from session state"""
+    if 'cart' not in st.session_state:
+        st.session_state.cart = {}
+    return st.session_state.cart
 
 def save_cart(cart_data):
-    """Save cart data to JSON file"""
-    try:
-        with open('cart.json', 'w') as f:
-            json.dump(cart_data, f, indent=2)
-        return True
-    except Exception:
-        return False
+    """Save cart data to session state"""
+    st.session_state.cart = cart_data
+    return True
 
 def add_to_cart(product_id, title, price, image_url, link):
     """Add or update product in cart"""
@@ -80,12 +72,8 @@ def update_quantity(product_id, new_quantity):
 
 def clear_cart():
     """Clear all items from the cart"""
-    try:
-        with open('cart.json', 'w') as f:
-            json.dump({}, f, indent=2)
-        return True
-    except Exception:
-        return False
+    st.session_state.cart = {}
+    return True
 
 # Page configuration
 st.set_page_config(
@@ -530,14 +518,6 @@ def run_streamlit_app():
     st.markdown('<h1 style="color: #00FFFF;">🤖 RoboShop Scraper</h1>', unsafe_allow_html=True)
     st.markdown('<h3 style="color: #00BFFF; margin-bottom: 2rem;">Find the best deals across multiple platforms</h3>', unsafe_allow_html=True)
 
-    # Clear Cart button on home page
-    if st.button("🗑️ Clear Cart", key="clear_cart_home", help="Remove all items from the cart"):
-        if clear_cart():
-            st.success("✅ Cart cleared successfully!")
-            st.rerun()
-        else:
-            st.error("❌ Failed to clear the cart")
-
     # Sidebar for user inputs
     st.sidebar.markdown('<h2 style="color: #00FFFF;">🎯 Search Configuration</h2>', unsafe_allow_html=True)
     
@@ -586,7 +566,7 @@ def run_streamlit_app():
     # Include images toggle
     include_images = st.sidebar.checkbox(
         "📸 Include Images",
-        value=False,
+        value=True,
         help="Toggle to include product images in results"
     )
     
@@ -744,7 +724,7 @@ st.markdown(
     """
     <footer style="position: fixed; bottom: 0; width: 100%; text-align: center; background-color: #0E1117; padding: 10px 0;">
         <p style="color: #FAFAFA; font-size: 14px; margin: 0;">
-            Developed by <a href="https://inmlink.netlify.app" target="_blank" style="color: #00FFFF; text-decoration: none;">INM</a>
+            Developed by <a href="https://inmlink.netlify.app" target="_blank" style="color: #00FFFF; text-decoration: none;"> © INM | 2025</a>
         </p>
     </footer>
     """,
