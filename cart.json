@@ -1,13 +1,4 @@
 {
-  "store.roboticsbd.com_Arduino_Uno_R3_0": {
-    "title": "Arduino Uno R3",
-    "price": "BDT 988",
-    "numeric_price": 988,
-    "image_url": "https://cdn.roboticsbd.com/6218-home_default/8-arduino-uno-r3-robotics-bangladesh.jpg",
-    "link": "https://store.roboticsbd.com/development-boards/94-8-arduino-uno-r3-robotics-bangladesh.html",
-    "quantity": 1,
-    "total_price": 988
-  },
   "store.roboticsbd.com_Motor_Shield_L293D_0": {
     "title": "Motor Shield L293D",
     "price": "BDT 219",
@@ -16,5 +7,14 @@
     "link": "https://store.roboticsbd.com/motor-driver/15-motor-shield-l293d-robotics-bangladesh.html",
     "quantity": 1,
     "total_price": 219
+  },
+  "store.roboticsbd.com_L293D_Shield_for_NodeMCU_V2_1": {
+    "title": "L293D Shield for NodeMCU V2",
+    "price": "BDT 185",
+    "numeric_price": 185,
+    "image_url": "https://cdn.roboticsbd.com/4328-home_default/l293d-shield-for-nodemcu-v2-robotics-bangladesh.jpg",
+    "link": "https://store.roboticsbd.com/arduino-shield/1810-l293d-shield-for-nodemcu-v2-robotics-bangladesh.html",
+    "quantity": 1,
+    "total_price": 185
   }
 }

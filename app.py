@@ -78,6 +78,15 @@ def update_quantity(product_id, new_quantity):
         return remove_from_cart(product_id)
     return False
 
+def clear_cart():
+    """Clear all items from the cart"""
+    try:
+        with open('cart.json', 'w') as f:
+            json.dump({}, f, indent=2)
+        return True
+    except Exception:
+        return False
+
 # Page configuration
 st.set_page_config(
     page_title="RoboShop Scraper",
@@ -287,14 +296,14 @@ st.markdown("""
 
     .view-cart-btn {
         position: fixed;
-        top: 20px;
+        top: 60px;
         right: 20px;
         z-index: 1000;
         background: linear-gradient(45deg, #00FFFF, #00BFFF);
         color: #000;
         padding: 10px 15px;
         border-radius: 25px;
-        box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+        
         font-weight: bold;
         text-decoration: none;
         font-size: 14px;
@@ -451,6 +460,14 @@ def display_cart():
     </div>
     ''', unsafe_allow_html=True)
     
+    # Clear Cart button
+    if st.button("🗑️ Clear Cart", key="clear_cart_page", help="Remove all items from the cart"):
+        if clear_cart():
+            st.success("✅ Cart cleared successfully!")
+            st.rerun()
+        else:
+            st.error("❌ Failed to clear the cart")
+    
     # Cart items
     st.markdown("### Items in Cart")
     
@@ -512,6 +529,14 @@ def run_streamlit_app():
     # Title
     st.markdown('<h1 style="color: #00FFFF;">🤖 RoboShop Scraper</h1>', unsafe_allow_html=True)
     st.markdown('<h3 style="color: #00BFFF; margin-bottom: 2rem;">Find the best deals across multiple platforms</h3>', unsafe_allow_html=True)
+
+    # Clear Cart button on home page
+    if st.button("🗑️ Clear Cart", key="clear_cart_home", help="Remove all items from the cart"):
+        if clear_cart():
+            st.success("✅ Cart cleared successfully!")
+            st.rerun()
+        else:
+            st.error("❌ Failed to clear the cart")
 
     # Sidebar for user inputs
     st.sidebar.markdown('<h2 style="color: #00FFFF;">🎯 Search Configuration</h2>', unsafe_allow_html=True)
@@ -714,6 +739,17 @@ def run_streamlit_app():
             </div>
             """, unsafe_allow_html=True)
 
+# Add footer at the bottom of the website
+st.markdown(
+    """
+    <footer style="position: fixed; bottom: 0; width: 100%; text-align: center; background-color: #0E1117; padding: 10px 0;">
+        <p style="color: #FAFAFA; font-size: 14px; margin: 0;">
+            Developed by <a href="https://inmlink.netlify.app" target="_blank" style="color: #00FFFF; text-decoration: none;">INM</a>
+        </p>
+    </footer>
+    """,
+    unsafe_allow_html=True
+)
 
 if __name__ == "__main__":
     run_streamlit_app()

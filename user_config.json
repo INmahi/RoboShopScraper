@@ -1,5 +1,5 @@
 {
-    "search_text": "l293d",
+    "search_text": "L293d shield",
     "price_range": {
         "min": 0,
         "max": 100000
@@ -7,7 +7,8 @@
     "region": "Bangladeshi",
     "selected_websites": [
         "https://www.store.roboticsbd.com/",
-        "https://roboticsshop.com.bd/"
+        "https://roboticsshop.com.bd/",
+        "https://techlandbd.com/"
     ],
     "include_images": true
 }
