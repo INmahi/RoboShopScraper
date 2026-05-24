@@ -1,6 +1,6 @@
 # RoboShop Scraper
 
-#### Video Demo:  <URL HERE>
+#### Video Demo:  https://youtu.be/o0vuL1jeQUk?si=VglT6tLSh2Bj-sVJ
 
 #### Description:
 RoboShop Scraper is a modern Streamlit-based application designed to search, filter, and compare robotics and electronics products across multiple online stores. It provides a user-friendly interface for product discovery, price comparison, and decision-making, making it an ideal tool for hobbyists, students, and professionals in the robotics and electronics domain.
